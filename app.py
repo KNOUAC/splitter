@@ -22,46 +22,57 @@ st.set_page_config(
 )
 
 # ==========================================
-# [디자인] 모바일 반응형 CSS 주입
+# [디자인] 모바일 반응형 CSS (수정됨)
 # ==========================================
 mobile_style = """
 <style>
-    /* 기본 폰트 크기 키우기 */
+    /* 폰트 적용 (선택사항) */
     html, body, [class*="css"] {
-        font-family: 'Suit', sans-serif;
+        font-family: sans-serif;
     }
 
     /* 모바일 환경 (화면 너비 640px 이하) 설정 */
     @media only screen and (max-width: 640px) {
-        /* 본문 텍스트 크기 확대 */
-        .stMarkdown p, .stMarkdown li, .stText {
-            font-size: 18px !important;
-            line-height: 1.6 !important;
-        }
         
-        /* 제목 크기 조정 */
+        /* 1. 전체 레이아웃: 좌우는 좁게, 위쪽은 넉넉하게 */
+        .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-top: 3rem !important;  /* 상단 잘림 방지 (넉넉하게) */
+            max-width: 100vw !important;
+            overflow-x: hidden !important; /* 가로 스크롤 방지 */
+        }
+
+        /* 2. 제목 크기 적당히 조절 */
         h1 {
-            font-size: 28px !important;
-            padding-top: 1rem !important;
+            font-size: 24px !important; /* 너무 크지 않게 조절 */
+            margin-bottom: 1rem !important;
         }
         
-        /* 파일 업로더 박스 크기 확대 (터치 쉽게) */
+        /* 3. 본문 텍스트 */
+        .stMarkdown p, .stMarkdown li {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+
+        /* 4. [핵심] 파일 업로더가 화면 밖으로 나가는 문제 해결 */
+        [data-testid="stFileUploader"] {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+        
         [data-testid="stFileUploader"] section {
-            padding: 2rem !important;
+            padding: 1rem !important; /* 내부 여백을 줄여서 화면 안으로 들어오게 함 */
+            min-height: 150px !important; /* 대신 높이를 키워서 터치 영역 확보 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        /* 버튼 크기 확대 */
+
+        /* 5. 버튼 스타일 */
         .stButton button {
             width: 100% !important;
-            font-size: 20px !important;
-            padding: 0.8rem !important;
-        }
-        
-        /* 모바일에서 좌우 여백 최소화 */
-        .block-container {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            max-width: 100% !important;
+            margin-top: 1rem !important;
         }
     }
 </style>
