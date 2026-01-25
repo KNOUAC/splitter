@@ -22,11 +22,11 @@ st.set_page_config(
 )
 
 # ==========================================
-# [디자인] 모바일 반응형 CSS (수정됨)
+# [디자인] 모바일 반응형 CSS (글자 크기 확대 버전)
 # ==========================================
 mobile_style = """
 <style>
-    /* 폰트 적용 (선택사항) */
+    /* 폰트 적용 */
     html, body, [class*="css"] {
         font-family: sans-serif;
     }
@@ -34,45 +34,56 @@ mobile_style = """
     /* 모바일 환경 (화면 너비 640px 이하) 설정 */
     @media only screen and (max-width: 640px) {
         
-        /* 1. 전체 레이아웃: 좌우는 좁게, 위쪽은 넉넉하게 */
+        /* 1. 레이아웃: 여백은 좁게 유지하되 위쪽은 넉넉히 */
         .block-container {
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
-            padding-top: 3rem !important;  /* 상단 잘림 방지 (넉넉하게) */
+            padding-top: 2rem !important; 
             max-width: 100vw !important;
-            overflow-x: hidden !important; /* 가로 스크롤 방지 */
         }
 
-        /* 2. 제목 크기 적당히 조절 */
+        /* 2. 제목 (아주 크게) */
         h1 {
-            font-size: 24px !important; /* 너무 크지 않게 조절 */
-            margin-bottom: 1rem !important;
+            font-size: 32px !important;
+            margin-bottom: 1.5rem !important;
+        }
+        h3 {
+            font-size: 24px !important;
         }
         
-        /* 3. 본문 텍스트 */
-        .stMarkdown p, .stMarkdown li {
-            font-size: 16px !important;
-            line-height: 1.5 !important;
+        /* 3. 본문 텍스트 (강제 확대) */
+        .stMarkdown p, .stMarkdown li, .stMarkdown span {
+            font-size: 20px !important;
+            line-height: 1.6 !important;
         }
 
-        /* 4. [핵심] 파일 업로더가 화면 밖으로 나가는 문제 해결 */
+        /* 4. 파일 업로더 내부 글자 키우기 (제일 중요) */
         [data-testid="stFileUploader"] {
             width: 100% !important;
-            padding: 0 !important;
         }
-        
         [data-testid="stFileUploader"] section {
-            padding: 1rem !important; /* 내부 여백을 줄여서 화면 안으로 들어오게 함 */
-            min-height: 150px !important; /* 대신 높이를 키워서 터치 영역 확보 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 1.5rem !important;
+            min-height: 120px !important;
+        }
+        /* 업로더 안의 작은 안내 문구들 타겟팅 */
+        [data-testid="stFileUploader"] small, 
+        [data-testid="stFileUploader"] div,
+        [data-testid="stFileUploader"] span {
+            font-size: 18px !important; /* 여기를 키워야 드래그앤드롭 글씨가 커짐 */
         }
 
-        /* 5. 버튼 스타일 */
+        /* 5. 버튼 왕만하게 만들기 */
         .stButton button {
             width: 100% !important;
+            font-size: 24px !important; /* 버튼 글씨 큼직하게 */
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
             margin-top: 1rem !important;
+        }
+        
+        /* 6. 다운로드 버튼 등 기타 위젯 텍스트 */
+        .stDownloadButton button {
+            font-size: 22px !important;
         }
     }
 </style>
