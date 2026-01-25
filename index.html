@@ -1,12 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>책 스캔 분할기</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* 여백 없이 화면 꽉 채우기 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 스크롤바 중복 방지 */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block; /* 하단 미세 여백 제거 */
+        }
     </style>
 </head>
 <body>
-    <iframe src="https://splitter-qxocwpeftv5tney6sqbe7u.streamlit.app//?embed=true"></iframe>
+    <iframe src="https://splitter-qxocwpeftv5tney6sqbe7u.streamlit.app/?embed=true"></iframe>
 </body>
 </html>
