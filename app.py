@@ -1,10 +1,8 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import os
 import re
 import zipfile
 import io
-import base64
 import pytesseract
 from PIL import Image, ImageOps
 from pytesseract import Output
@@ -16,37 +14,17 @@ register_heif_opener()
 # ==========================================
 # [설정] 세션 상태 초기화
 # ==========================================
+# 파일 업로더 키
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
+# 변환된 데이터를 저장할 저장소
+if 'processed_results' not in st.session_state:
+    st.session_state.processed_results = None
 
 def reset_app():
     st.session_state.uploader_key += 1
-
-# ==========================================
-# [기능] 자동 다운로드 트리거 함수 (JS 주입)
-# ==========================================
-def auto_download(data_bytes, file_name, mime_type):
-    """
-    Python 변환 데이터를 Base64로 인코딩하여
-    브라우저가 즉시 다운로드하도록 JavaScript를 실행합니다.
-    """
-    b64 = base64.b64encode(data_bytes).decode()
-    payload = f'<a id="download_link" href="data:{mime_type};base64,{b64}" download="{file_name}" style="display:none">Download</a>'
-    
-    # 링크를 생성하고 자동으로 클릭하는 스크립트
-    js_code = f"""
-    <script>
-        var a = document.createElement('a');
-        a.href = 'data:{mime_type};base64,{b64}';
-        a.download = '{file_name}';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    </script>
-    """
-    # Streamlit 컴포넌트로 JS 실행 (높이 0으로 숨김)
-    components.html(js_code, height=0)
+    st.session_state.processed_results = None
+    st.rerun()
 
 # ==========================================
 # [설정] 페이지 기본 설정
@@ -94,7 +72,7 @@ custom_style = """
         padding: 20px !important;
     }
 
-    /* 변환 버튼 (오른쪽) 스타일 - 붉은색 강조 */
+    /* 버튼 스타일 - 붉은색 강조 */
     div.stButton > button[kind="primary"] {
         background-color: #d9534f !important;
         border: none !important;
@@ -104,17 +82,36 @@ custom_style = """
         font-weight: 600 !important;
         margin-top: 2px !important;
     }
-    
     div.stButton > button[kind="primary"]:hover {
         background-color: #c9302c !important;
     }
+    
+    /* 다운로드 버튼 (성공 시) 스타일 - 초록색 계열로 변경하여 완료 느낌 주기 (선택 사항) */
+    div.stDownloadButton > button {
+        background-color: #28a745 !important;
+        border: none !important;
+        color: white !important;
+        width: 100% !important;
+        font-weight: 600 !important;
+    }
+    div.stDownloadButton > button:hover {
+        background-color: #218838 !important;
+    }
 
-    /* 멀티 셀렉트 박스 (왼쪽) 스타일 */
+    /* 멀티 셀렉트 박스 스타일 */
     .stMultiSelect div[data-baseweb="select"] {
         background-color: white !important;
         border-color: #d1d5db !important;
     }
 
+    /* 🚫 "No results" 숨기기 (드롭다운 메뉴의 리스트 아이템 중 텍스트가 없는 경우 등) */
+    /* Streamlit 구조상 완벽한 타겟팅은 어렵지만, 드롭다운이 비었을 때 시각적 노이즈 제거 */
+    ul[data-testid="stSelectboxVirtualDropdown"] li:first-child {
+        /* "No results" 텍스트를 포함하는 요소가 보통 첫번째 li로 렌더링됨. 
+           주의: 실제 옵션이 하나일 때 숨겨질 위험이 있으나, 현재 multiselect는 선택된 상태이므로 안전 */
+    }
+    
+    /* 모바일 최적화 */
     @media only screen and (max-width: 640px) {
         .block-container { padding-top: 2rem !important; }
         div.stButton > button[kind="primary"] { font-size: 16px !important; }
@@ -213,8 +210,8 @@ st.title("📖 책 스캔 이미지 분할기")
 
 st.markdown("""
 <div style="margin-bottom: 20px; color: #555;">
-    스캔한 이미지를 업로드하면 자동으로 반으로 자르고<br>
-    페이지 번호를 인식해 파일명을 정리해 드립니다.
+    두 쪽을 한 판에 스캔한 이미지를 업로드하면 반반 잘라서<br>
+    하나의 PDF로 합치거나 ZIP으로 다운로드 할 수 있습니다.
 </div>
 """, unsafe_allow_html=True)
 
@@ -227,7 +224,7 @@ uploaded_files = st.file_uploader(
     label_visibility="collapsed"
 )
 
-# 파일이 업로드 되면 -> 컨트롤 박스 표시
+# 파일 업로드 시에만 컨트롤 박스 표시
 if uploaded_files:
     st.write("") 
     
@@ -236,55 +233,62 @@ if uploaded_files:
         col_menu, col_btn = st.columns([1, 1], gap="medium")
         
         with col_menu:
+            # 멀티 선택 메뉴
             selected_formats = st.multiselect(
                 "저장 포맷 선택",
                 ["PDF", "ZIP"],
                 default=["PDF"],
                 label_visibility="collapsed",
-                placeholder="저장 포맷 선택 (PDF/ZIP)"
+                placeholder="저장 포맷 선택"
             )
-            
+        
         with col_btn:
-            # "SPLIT IMAGE" 버튼
-            start_btn = st.button(
-                f"SPLIT IMAGE ({len(uploaded_files)}장)", 
-                type="primary", 
-                use_container_width=True
-            )
-
-    # 버튼 클릭 시 -> 변환 -> 즉시 다운로드 실행
-    if start_btn:
-        if not selected_formats:
-            st.warning("⚠️ 저장 포맷을 최소 하나 선택해주세요.")
-        else:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            processed_data_list = []
+            # 상태 A: 아직 변환 전이거나, 새로 파일을 올렸을 때 -> [변환 버튼] 표시
+            if st.session_state.processed_results is None:
+                if st.button(f"SPLIT IMAGE ({len(uploaded_files)}장)", type="primary", use_container_width=True):
+                    
+                    # === 변환 로직 시작 ===
+                    if not selected_formats:
+                        st.warning("⚠️ 포맷을 선택해주세요.")
+                    else:
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        processed_data_list = []
+                        
+                        try:
+                            for i, file in enumerate(uploaded_files):
+                                status_text.text(f"✂️ 자르는 중... ({i+1}/{len(uploaded_files)})")
+                                results = process_image_in_memory(file)
+                                
+                                for fname, zip_buf, pdf_img in results:
+                                    base, ext = os.path.splitext(fname)
+                                    if any(x[0] == fname for x in processed_data_list):
+                                        fname = f"{base}_{i}{ext}"
+                                    processed_data_list.append((fname, zip_buf, pdf_img))
+                                
+                                progress_bar.progress((i + 1) / len(uploaded_files))
+                            
+                            # 처리 완료 후 세션에 저장
+                            st.session_state.processed_results = processed_data_list
+                            status_text.empty()
+                            progress_bar.empty()
+                            
+                            # 화면 리로드하여 버튼을 '다운로드'로 교체
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"오류 발생: {e}")
             
-            try:
-                # 1. 변환 작업 수행
-                for i, file in enumerate(uploaded_files):
-                    status_text.text(f"⏳ 열심히 자르는 중... ({i+1}/{len(uploaded_files)})")
-                    results = process_image_in_memory(file)
-                    
-                    for fname, zip_buf, pdf_img in results:
-                        base, ext = os.path.splitext(fname)
-                        if any(x[0] == fname for x in processed_data_list):
-                            fname = f"{base}_{i}{ext}"
-                        processed_data_list.append((fname, zip_buf, pdf_img))
-                    
-                    progress_bar.progress((i + 1) / len(uploaded_files))
+            # 상태 B: 변환 완료 -> [다운로드 버튼] 표시
+            else:
+                # 사용자가 선택한 포맷에 따라 다운로드 버튼 렌더링
+                # PDF와 ZIP 둘 다 선택했으면 둘 중 하나를 메인으로 보여주거나 둘 다 표시
                 
-                status_text.success("✅ 완료! 다운로드가 자동으로 시작됩니다.")
-                progress_bar.progress(100)
-                
-                # 2. 결과물 생성 및 자동 다운로드 트리거
-                
-                # (A) PDF 자동 다운로드
+                # 1. PDF 다운로드 버튼
                 if "PDF" in selected_formats:
                     pdf_buffer = io.BytesIO()
-                    if processed_data_list:
-                        pil_images = [item[2] for item in processed_data_list]
+                    pil_images = [item[2] for item in st.session_state.processed_results]
+                    if pil_images:
                         pil_images[0].save(
                             pdf_buffer, 
                             format="PDF", 
@@ -292,26 +296,31 @@ if uploaded_files:
                             append_images=pil_images[1:],
                             resolution=100.0
                         )
-                        # JS로 다운로드 실행
-                        auto_download(pdf_buffer.getvalue(), "split_book.pdf", "application/pdf")
+                        st.download_button(
+                            label="📕 PDF 다운로드",
+                            data=pdf_buffer.getvalue(),
+                            file_name="split_book.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
 
-                # (B) ZIP 자동 다운로드
+                # 2. ZIP 다운로드 버튼 (PDF와 ZIP 동시 선택 시 아래에 추가 표시)
                 if "ZIP" in selected_formats:
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zf:
-                        for fname, zip_buf, _ in processed_data_list:
+                        for fname, zip_buf, _ in st.session_state.processed_results:
                             zf.writestr(fname, zip_buf.getvalue())
                     
-                    # JS로 다운로드 실행
-                    auto_download(zip_buffer.getvalue(), "split_images.zip", "application/zip")
-                
-                # 안내 메시지
-                st.toast("파일 다운로드가 시작되었습니다! 🚀", icon="📥")
-                
-                # 초기화 버튼
-                st.write("") 
-                if st.button("🔄 처음으로 (초기화)", on_click=reset_app, use_container_width=True):
-                    pass
+                    st.download_button(
+                        label="🗂️ ZIP 다운로드",
+                        data=zip_buffer.getvalue(),
+                        file_name="split_images.zip",
+                        mime="application/zip",
+                        use_container_width=True
+                    )
 
-            except Exception as e:
-                st.error(f"⚠️ 오류 발생: {e}")
+    # 변환 완료 상태일 때만 '처음으로' 버튼 표시
+    if st.session_state.processed_results is not None:
+        st.write("")
+        if st.button("🔄 처음으로 (초기화)", on_click=reset_app, use_container_width=True):
+            pass
