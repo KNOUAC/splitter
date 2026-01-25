@@ -22,57 +22,60 @@ st.set_page_config(
 )
 
 # ==========================================
-# [설정] 모바일 화면 강제 최적화 (뷰포트 + CSS)
+# [설정] 모바일 화면 최적화 (밸런스 조정 버전)
 # ==========================================
 mobile_style = """
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
 <style>
-    /* 폰트 적용 */
+    /* 기본 폰트 적용 */
     html, body, [class*="css"] {
         font-family: 'Suit', sans-serif;
     }
 
-    /* 2. 모바일 (화면폭 640px 이하) 전용 스타일 */
+    /* 📱 모바일 환경 (화면 너비 640px 이하) 설정 */
     @media only screen and (max-width: 640px) {
         
-        /* 전체 컨테이너 여백 제거 (화면 꽉 채우기) */
+        /* 1. 레이아웃: 여백을 살짝 주어 답답하지 않게 */
         .block-container {
-            padding-top: 1rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-top: 2rem !important;
+            padding-left: 1rem !important;  /* 좌우 1rem 정도가 보기 좋습니다 */
+            padding-right: 1rem !important;
             max-width: 100% !important;
         }
 
-        /* 제목: 글자 크기를 px이 아니라 화면 너비 비례(vw)로 설정 */
+        /* 2. 제목: 적당히 강조 */
         h1 {
-            font-size: 8vw !important; /* 화면 폭의 8% 크기 */
+            font-size: 26px !important; /* 너무 거대하지 않게 줄임 */
             margin-bottom: 0.5rem !important;
         }
         
-        /* 본문 글자: 아주 크게 고정 */
-        .stMarkdown p, .stMarkdown li, p {
-            font-size: 18px !important; /* 최소 18px 보장 */
-            line-height: 1.6 !important;
-        }
-
-        /* 파일 업로더 박스 */
-        [data-testid="stFileUploader"] section {
-            padding: 1.5rem !important;
+        h3 {
+            font-size: 20px !important;
         }
         
-        /* 업로더 안의 안내 문구 (Drag and drop...) */
+        /* 3. 본문 텍스트: 모바일 표준 크기(16px)로 조정 */
+        .stMarkdown p, .stMarkdown li, p {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+
+        /* 4. 파일 업로더: 글자가 깨지지 않도록 사이즈 최적화 */
+        [data-testid="stFileUploader"] section {
+            padding: 1rem !important; /* 내부 여백 적당히 */
+        }
+        
+        /* 안내 문구 (Drag and drop...) 크기 줄임 */
         [data-testid="stFileUploader"] div, 
         [data-testid="stFileUploader"] span, 
         [data-testid="stFileUploader"] small {
-            font-size: 16px !important; /* 강제 확대 */
+            font-size: 14px !important; /* 14px이면 충분히 잘 보입니다 */
         }
 
-        /* 버튼 */
+        /* 5. 버튼: 여전히 터치하기 좋게 유지하되 조금 날렵하게 */
         .stButton button {
             width: 100% !important;
-            font-size: 20px !important;
-            padding: 10px !important;
+            font-size: 18px !important;
+            padding: 0.6rem !important;
+            margin-top: 0.5rem !important;
         }
     }
 </style>
