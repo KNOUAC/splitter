@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# [설정] 모바일 화면 최적화 (밸런스 조정 버전)
+# [설정] 모바일 화면 최적화
 # ==========================================
 mobile_style = """
 <style>
@@ -37,14 +37,14 @@ mobile_style = """
         /* 1. 레이아웃: 여백을 살짝 주어 답답하지 않게 */
         .block-container {
             padding-top: 2rem !important;
-            padding-left: 1rem !important;  /* 좌우 1rem 정도가 보기 좋습니다 */
+            padding-left: 1rem !important; 
             padding-right: 1rem !important;
             max-width: 100% !important;
         }
 
         /* 2. 제목: 적당히 강조 */
         h1 {
-            font-size: 26px !important; /* 너무 거대하지 않게 줄임 */
+            font-size: 26px !important; 
             margin-bottom: 0.5rem !important;
         }
         
@@ -52,26 +52,26 @@ mobile_style = """
             font-size: 20px !important;
         }
         
-        /* 3. 본문 텍스트: 모바일 표준 크기(16px)로 조정 */
+        /* 3. 본문 텍스트: 모바일 표준 크기 */
         .stMarkdown p, .stMarkdown li, p {
             font-size: 16px !important;
             line-height: 1.5 !important;
         }
 
-        /* 4. 파일 업로더: 글자가 깨지지 않도록 사이즈 최적화 */
+        /* 4. 파일 업로더 */
         [data-testid="stFileUploader"] section {
-            padding: 1rem !important; /* 내부 여백 적당히 */
+            padding: 1rem !important; 
         }
         
-        /* 안내 문구 (Drag and drop...) 크기 줄임 */
+        /* 안내 문구 크기 줄임 */
         [data-testid="stFileUploader"] div, 
         [data-testid="stFileUploader"] span, 
         [data-testid="stFileUploader"] small {
-            font-size: 14px !important; /* 14px이면 충분히 잘 보입니다 */
+            font-size: 14px !important; 
         }
 
-        /* 5. 버튼: 여전히 터치하기 좋게 유지하되 조금 날렵하게 */
-        .stButton button {
+        /* 5. 버튼: 터치하기 좋게 */
+        .stButton button, .stDownloadButton button {
             width: 100% !important;
             font-size: 18px !important;
             padding: 0.6rem !important;
@@ -163,22 +163,22 @@ def process_image_in_memory(uploaded_file):
     buf_r = io.BytesIO()
     img_r.save(buf_r, format="JPEG", quality=95)
     
-    return [(fname_l, buf_l), (fname_r, buf_r)]
+    # PDF 생성을 위해 PIL 이미지 객체 자체도 반환 (img_l, img_r)
+    return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
-# [UI] 화면 구성 (설명 부분 개선)
+# [UI] 화면 구성
 # ==========================================
-st.title("📖 책 스캔 이미지 반으로 잘라드려요~")
+st.title("📖 책 스캔 이미지 반 잘라드려요~")
 
-# 텍스트 대신 Info 박스나 마크다운 헤더 사용으로 가독성 높임
 st.markdown("""
 ### 🃏 사용 설명
 양쪽을 한 판에 스캔한 이미지(JPG, PNG, HEIC)를 업로드하면:
 1. 일괄 **반으로 자르고** 🀱
-2. 페이지 하단 구석에 번호가 있다면 인식하여 **파일명에 반영**해드립니다. 🕵🏽
+2. **하나의 PDF**로 묶거나 **ZIP**으로 다운로드할 수 있습니다.
 """)
 
-st.write("---") # 구분선
+st.write("---")
 
 uploaded_files = st.file_uploader(
     "👇 아래 영역을 터치하여 사진을 선택하세요", 
@@ -187,34 +187,77 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
-    # 버튼도 크게 보이도록 스타일 적용됨
     if st.button(f"🚀 총 {len(uploaded_files)}장 변환 시작하기", type="primary"):
-        zip_buffer = io.BytesIO()
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        with zipfile.ZipFile(zip_buffer, "w") as zf:
+        # 결과를 저장할 리스트 (순서 유지)
+        processed_data_list = []
+        
+        try:
             for i, file in enumerate(uploaded_files):
                 status_text.text(f"⏳ 처리 중... ({i+1}/{len(uploaded_files)})")
-                try:
-                    results = process_image_in_memory(file)
-                    for fname, img_data in results:
-                        if fname in zf.namelist():
-                            base, ext = os.path.splitext(fname)
-                            fname = f"{base}_{i}{ext}"
-                        zf.writestr(fname, img_data.getvalue())
-                except Exception as e:
-                    st.error(f"⚠️ 오류: {file.name} - {e}")
+                
+                # 이미지 처리 (파일명, 바이트버퍼, PIL이미지객체 반환)
+                results = process_image_in_memory(file)
+                
+                for fname, img_buf, img_pil in results:
+                    # 중복 파일명 방지 로직
+                    base, ext = os.path.splitext(fname)
+                    # 리스트에 이미 같은 이름이 있는지 확인
+                    if any(x[0] == fname for x in processed_data_list):
+                        fname = f"{base}_{i}{ext}"
+                    
+                    processed_data_list.append((fname, img_buf, img_pil))
                 
                 progress_bar.progress((i + 1) / len(uploaded_files))
-        
-        status_text.success("✅ 변환 완료!")
-        progress_bar.progress(100)
             
-        st.download_button(
-            label="📥 결과물 다운로드 (ZIP)",
-            data=zip_buffer.getvalue(),
-            file_name="split_images.zip",
-            mime="application/zip",
-            type="primary" 
-        )
+            status_text.success("✅ 변환 완료! 원하는 포맷으로 다운로드하세요.")
+            progress_bar.progress(100)
+
+            # --- [다운로드 옵션 준비] ---
+            
+            # 1. ZIP 생성
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w") as zf:
+                for fname, img_buf, _ in processed_data_list:
+                    zf.writestr(fname, img_buf.getvalue())
+            
+            # 2. PDF 생성
+            pdf_buffer = io.BytesIO()
+            if processed_data_list:
+                # PIL 이미지 리스트 추출
+                pil_images = [item[2] for item in processed_data_list]
+                # 첫 번째 이미지를 기준으로 나머지를 append하여 PDF 저장
+                pil_images[0].save(
+                    pdf_buffer, 
+                    format="PDF", 
+                    save_all=True, 
+                    append_images=pil_images[1:],
+                    resolution=100.0
+                )
+
+            st.write("") # 여백
+            
+            # 모바일에서 버튼 두 개가 나란히 보이도록 컬럼 분할
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.download_button(
+                    label="📕 PDF로 받기",
+                    data=pdf_buffer.getvalue(),
+                    file_name="split_book.pdf",
+                    mime="application/pdf",
+                    type="primary"
+                )
+            
+            with col2:
+                st.download_button(
+                    label="🗂️ ZIP으로 받기",
+                    data=zip_buffer.getvalue(),
+                    file_name="split_images.zip",
+                    mime="application/zip"
+                )
+
+        except Exception as e:
+            st.error(f"⚠️ 오류 발생: {e}")
