@@ -342,7 +342,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.0")
+        st.caption("ver 1.0.1 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
