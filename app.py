@@ -93,7 +93,7 @@ TRANSLATIONS = {
     },
     'menu_settings': {
         'Korean': '언어 (Language)', 
-        'English': '언어 (Language)'  # [수정] English 선택 시에도 '언어 (Language)'로 고정
+        'English': '언어 (Language)' 
     },
     'menu_lang': {
         'Korean': '언어 (Language)',
@@ -144,7 +144,7 @@ custom_style = """
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 🟢 로고 스타일 (Impact 폰트) */
+    /* 🟢 로고 스타일 (Impact 폰트 + 음영 처리) */
     .knouac-logo {
         font-family: 'Impact', sans-serif !important;
         font-size: 32px;
@@ -152,6 +152,8 @@ custom_style = """
         color: #2c3e50;
         letter-spacing: 1px;
         text-decoration: none;
+        /* 음영(그림자) 효과 추가 */
+        text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
     }
 
     /* 팝오버(메뉴) 버튼 커스텀 */
@@ -322,7 +324,7 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 타이틀: 항상 "언어 (Language)"로 고정됨
+        # 🟢 타이틀: 항상 "언어 (Language)"로 고정
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
@@ -342,7 +344,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 THEOHYEON")
+        st.caption("ver 1.0.0 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
