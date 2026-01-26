@@ -12,21 +12,6 @@ from pillow_heif import register_heif_opener
 register_heif_opener()
 
 # ==========================================
-# [설정] 세션 상태 초기화
-# ==========================================
-# 파일 업로더 키
-if 'uploader_key' not in st.session_state:
-    st.session_state.uploader_key = 0
-# 변환된 데이터를 저장할 저장소
-if 'processed_results' not in st.session_state:
-    st.session_state.processed_results = None
-
-def reset_app():
-    st.session_state.uploader_key += 1
-    st.session_state.processed_results = None
-    st.rerun()
-
-# ==========================================
 # [설정] 페이지 기본 설정
 # ==========================================
 st.set_page_config(
@@ -35,6 +20,20 @@ st.set_page_config(
     layout="centered", 
     initial_sidebar_state="collapsed"
 )
+
+# ==========================================
+# [설정] 세션 상태 초기화 (새로고침 시 데이터 유지용)
+# ==========================================
+if 'processed_data' not in st.session_state:
+    st.session_state.processed_data = None
+if 'uploader_key' not in st.session_state:
+    st.session_state.uploader_key = 0
+
+def reset_app():
+    # 초기화 버튼 누르면 상태 비우고 리로드
+    st.session_state.processed_data = None
+    st.session_state.uploader_key += 1
+    st.rerun()
 
 # ==========================================
 # [설정] UI 디자인 (CSS 주입)
@@ -57,13 +56,6 @@ custom_style = """
         fill: #7d8294 !important;
     }
 
-    [data-testid="stFileUploader"] button {
-        background-color: #ffffff !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 6px !important;
-        padding: 0.4rem 1.0rem !important;
-    }
-
     /* 🎛️ 컨트롤 박스 디자인 */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         border: 2px dashed #a0a5b5 !important;
@@ -72,21 +64,21 @@ custom_style = """
         padding: 20px !important;
     }
 
-    /* 버튼 스타일 - 붉은색 강조 */
+    /* 변환 버튼 (빨간색) */
     div.stButton > button[kind="primary"] {
         background-color: #d9534f !important;
         border: none !important;
         color: white !important;
         width: 100% !important;
-        padding: 0.5rem 1rem !important;
+        padding: 0.6rem 1rem !important;
         font-weight: 600 !important;
-        margin-top: 2px !important;
+        margin-top: 5px !important;
     }
     div.stButton > button[kind="primary"]:hover {
         background-color: #c9302c !important;
     }
-    
-    /* 다운로드 버튼 (성공 시) 스타일 - 초록색 계열로 변경하여 완료 느낌 주기 (선택 사항) */
+
+    /* 다운로드 버튼 (성공 시, 초록색 계열) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none !important;
@@ -98,19 +90,11 @@ custom_style = """
         background-color: #218838 !important;
     }
 
-    /* 멀티 셀렉트 박스 스타일 */
-    .stMultiSelect div[data-baseweb="select"] {
-        background-color: white !important;
-        border-color: #d1d5db !important;
+    /* 체크박스 디자인 조정 */
+    .stCheckbox {
+        padding-top: 5px;
     }
 
-    /* 🚫 "No results" 숨기기 (드롭다운 메뉴의 리스트 아이템 중 텍스트가 없는 경우 등) */
-    /* Streamlit 구조상 완벽한 타겟팅은 어렵지만, 드롭다운이 비었을 때 시각적 노이즈 제거 */
-    ul[data-testid="stSelectboxVirtualDropdown"] li:first-child {
-        /* "No results" 텍스트를 포함하는 요소가 보통 첫번째 li로 렌더링됨. 
-           주의: 실제 옵션이 하나일 때 숨겨질 위험이 있으나, 현재 multiselect는 선택된 상태이므로 안전 */
-    }
-    
     /* 모바일 최적화 */
     @media only screen and (max-width: 640px) {
         .block-container { padding-top: 2rem !important; }
@@ -206,12 +190,13 @@ def process_image_in_memory(uploaded_file):
 # ==========================================
 # [UI] 화면 구성
 # ==========================================
-st.title("📖 책 스캔 이미지 분할기")
+# [수정] st.title 대신 HTML로 폰트 크기를 26px 정도로 줄여서 표시 (기존보다 작게)
+st.markdown("<h2 style='font-size: 26px; font-weight: 700; margin-bottom: 10px;'>책 스캔 이미지 반반 분할기</h2>", unsafe_allow_html=True)
 
 st.markdown("""
 <div style="margin-bottom: 20px; color: #555;">
-    두 쪽을 한 판에 스캔한 이미지를 업로드하면 반반 잘라서<br>
-    하나의 PDF로 합치거나 ZIP으로 다운로드 할 수 있습니다.
+    📖 두 쪽을 한 판에 스캔한 이미지를 업로드하면<br>
+    반반 잘라서 하나의 PDF로 합치거나 ZIP으로 다운로드 할 수 있습니다.
 </div>
 """, unsafe_allow_html=True)
 
@@ -224,103 +209,16 @@ uploaded_files = st.file_uploader(
     label_visibility="collapsed"
 )
 
-# 파일 업로드 시에만 컨트롤 박스 표시
+# 파일 업로드 시 컨트롤 박스 표시
 if uploaded_files:
     st.write("") 
     
-    # 2. 컨트롤 박스 (점선 테두리)
     with st.container(border=True):
-        col_menu, col_btn = st.columns([1, 1], gap="medium")
+        col_opt, col_act = st.columns([1, 1.2], gap="large")
         
-        with col_menu:
-            # 멀티 선택 메뉴
-            selected_formats = st.multiselect(
-                "저장 포맷 선택",
-                ["PDF", "ZIP"],
-                default=["PDF"],
-                label_visibility="collapsed",
-                placeholder="저장 포맷 선택"
-            )
-        
-        with col_btn:
-            # 상태 A: 아직 변환 전이거나, 새로 파일을 올렸을 때 -> [변환 버튼] 표시
-            if st.session_state.processed_results is None:
-                if st.button(f"SPLIT IMAGE ({len(uploaded_files)}장)", type="primary", use_container_width=True):
-                    
-                    # === 변환 로직 시작 ===
-                    if not selected_formats:
-                        st.warning("⚠️ 포맷을 선택해주세요.")
-                    else:
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
-                        processed_data_list = []
-                        
-                        try:
-                            for i, file in enumerate(uploaded_files):
-                                status_text.text(f"✂️ 자르는 중... ({i+1}/{len(uploaded_files)})")
-                                results = process_image_in_memory(file)
-                                
-                                for fname, zip_buf, pdf_img in results:
-                                    base, ext = os.path.splitext(fname)
-                                    if any(x[0] == fname for x in processed_data_list):
-                                        fname = f"{base}_{i}{ext}"
-                                    processed_data_list.append((fname, zip_buf, pdf_img))
-                                
-                                progress_bar.progress((i + 1) / len(uploaded_files))
-                            
-                            # 처리 완료 후 세션에 저장
-                            st.session_state.processed_results = processed_data_list
-                            status_text.empty()
-                            progress_bar.empty()
-                            
-                            # 화면 리로드하여 버튼을 '다운로드'로 교체
-                            st.rerun()
-                            
-                        except Exception as e:
-                            st.error(f"오류 발생: {e}")
-            
-            # 상태 B: 변환 완료 -> [다운로드 버튼] 표시
-            else:
-                # 사용자가 선택한 포맷에 따라 다운로드 버튼 렌더링
-                # PDF와 ZIP 둘 다 선택했으면 둘 중 하나를 메인으로 보여주거나 둘 다 표시
-                
-                # 1. PDF 다운로드 버튼
-                if "PDF" in selected_formats:
-                    pdf_buffer = io.BytesIO()
-                    pil_images = [item[2] for item in st.session_state.processed_results]
-                    if pil_images:
-                        pil_images[0].save(
-                            pdf_buffer, 
-                            format="PDF", 
-                            save_all=True, 
-                            append_images=pil_images[1:],
-                            resolution=100.0
-                        )
-                        st.download_button(
-                            label="📕 PDF 다운로드",
-                            data=pdf_buffer.getvalue(),
-                            file_name="split_book.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-
-                # 2. ZIP 다운로드 버튼 (PDF와 ZIP 동시 선택 시 아래에 추가 표시)
-                if "ZIP" in selected_formats:
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, "w") as zf:
-                        for fname, zip_buf, _ in st.session_state.processed_results:
-                            zf.writestr(fname, zip_buf.getvalue())
-                    
-                    st.download_button(
-                        label="🗂️ ZIP 다운로드",
-                        data=zip_buffer.getvalue(),
-                        file_name="split_images.zip",
-                        mime="application/zip",
-                        use_container_width=True
-                    )
-
-    # 변환 완료 상태일 때만 '처음으로' 버튼 표시
-    if st.session_state.processed_results is not None:
-        st.write("")
-        if st.button("🔄 처음으로 (초기화)", on_click=reset_app, use_container_width=True):
-            pass
+        # [왼쪽] 옵션 선택 (체크박스로 변경하여 'No results' 문제 해결)
+        with col_opt:
+            st.markdown("**저장 포맷**")
+            sub_c1, sub_c2 = st.columns(2)
+            with sub_c1:
+                opt_pdf = st
