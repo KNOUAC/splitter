@@ -255,9 +255,6 @@ def find_largest_number_across_corners(half_image):
         return None
     return None
 
-# [수정] 원본 사이즈 유지를 위해 리사이징 함수 미사용 (함수는 남겨두되 호출하지 않거나 삭제 가능)
-# def resize_for_pdf(img): ... (삭제됨)
-
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
     img = ImageOps.exif_transpose(img)
@@ -291,10 +288,7 @@ def process_image_in_memory(uploaded_file):
     buf_r = io.BytesIO()
     img_r.save(buf_r, format="JPEG", quality=95)
     
-    # [수정] PDF용 리사이징 과정 제거 -> 원본 이미지 객체(img_l, img_r)를 그대로 전달
-    # img_l_pdf = resize_for_pdf(img_l) 
-    # img_r_pdf = resize_for_pdf(img_r)
-    
+    # PDF 생성을 위해 원본 이미지 객체 그대로 반환
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
@@ -413,8 +407,9 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [수정] 원본 해상도를 그대로 사용합니다. (resolution은 문서 표시 크기용 메타데이터입니다)
-                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=100.0)
+                        # [수정] resolution=300.0 (300 DPI)
+                        # 이미지는 고해상도지만, PDF 뷰어에서는 적절한 문서 크기로 보이게 만듭니다.
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=300.0)
                         st.download_button(
                             label=get_text('download_pdf'),
                             data=pdf_buffer.getvalue(),
