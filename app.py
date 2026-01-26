@@ -56,8 +56,8 @@ TRANSLATIONS = {
         'English': 'Save Format'
     },
     'split_btn': {
-        'Korean': '✂️ 변환 시작하기',
-        'English': '✂️ START SPLITTING'
+        'Korean': '䷢ 변환 시작하기',
+        'English': '䷢ START SPLITTING'
     },
     'warning_msg': {
         'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
@@ -68,16 +68,16 @@ TRANSLATIONS = {
         'English': 'Processing...'
     },
     'download_pdf': {
-        'Korean': '📕 PDF 다운로드',
-        'English': '📕 Download PDF'
+        'Korean': '📗 PDF 다운로드',
+        'English': '📗 Download PDF'
     },
     'download_zip': {
         'Korean': '🗂️ ZIP 다운로드',
         'English': '🗂️ Download ZIP'
     },
     'reset_btn': {
-        'Korean': '🔄 처음으로 (초기화)',
-        'English': '🔄 Reset (Start Over)'
+        'Korean': '🗑️ 처음으로 (초기화)',
+        'English': '🗑️ Reset (Start Over)'
     },
     'menu_settings': {
         'Korean': '설정 (Settings)',
@@ -132,13 +132,13 @@ custom_style = """
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 🟢 로고 스타일 (Impact 폰트 적용) */
+    /* 🟢 로고 스타일 (Impact 폰트) */
     .knouac-logo {
         font-family: 'Impact', sans-serif !important;
-        font-size: 32px; /* Impact는 약간 작게 보이는 경향이 있어 30->32로 미세 조정 */
-        font-weight: 400; /* Impact 자체가 굵으므로 weight는 일반으로 둠 */
+        font-size: 32px;
+        font-weight: 400;
         color: #2c3e50;
-        letter-spacing: 1px; /* Impact는 자간이 좁아서 살짝 띄워줌 */
+        letter-spacing: 1px;
         text-decoration: none;
     }
 
@@ -151,7 +151,7 @@ custom_style = """
         border: none !important;
         background: transparent !important;
         color: #333 !important;
-        font-size: 24px !important; /* 아이콘 크기 */
+        font-size: 24px !important;
         padding: 0 10px !important;
         margin-top: -5px;
         box-shadow: none !important;
@@ -159,6 +159,14 @@ custom_style = """
     [data-testid="stPopover"] > button:hover {
         color: #d9534f !important;
         background: transparent !important;
+    }
+
+    /* 🟢 [NEW] 설정 메뉴 내부 (라디오 버튼 등) 폰트 변경: Trebuchet MS */
+    [data-testid="stRadio"], 
+    [data-testid="stRadio"] label, 
+    [data-testid="stRadio"] div, 
+    [data-testid="stRadio"] p {
+        font-family: 'Trebuchet MS', sans-serif !important;
     }
 
     /* 메인 타이틀 */
@@ -303,9 +311,13 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        st.markdown(f"**{get_text('menu_settings')}**")
+        # 🟢 [NEW] "설정 (Settings)" 텍스트에 Trebuchet MS 적용
+        st.markdown(
+            f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
+            unsafe_allow_html=True
+        )
         
-        # 언어 선택
+        # 언어 선택 (CSS로 Trebuchet MS 적용됨)
         new_lang = st.radio(
             get_text('menu_lang'),
             ["Korean", "English"],
@@ -408,7 +420,7 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화 크기)
+                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화)
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
