@@ -14,7 +14,7 @@ from pillow_heif import register_heif_opener
 register_heif_opener()
 
 st.set_page_config(
-    page_title="책 스캔 분할기", 
+    page_title="KNOUAC Book Splitter", 
     page_icon="📚",
     layout="centered", 
     initial_sidebar_state="collapsed"
@@ -27,6 +27,8 @@ if 'processed_data' not in st.session_state:
     st.session_state.processed_data = None
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
+if 'language' not in st.session_state:
+    st.session_state.language = 'Korean' # 기본 언어 설정
 
 def reset_app():
     st.session_state.processed_data = None
@@ -34,7 +36,7 @@ def reset_app():
     st.rerun()
 
 # ==========================================
-# [스타일] CSS (웹 도구 스타일 적용)
+# [스타일] CSS (웹 도구 스타일 + 메뉴 버튼)
 # ==========================================
 custom_style = """
 <style>
@@ -44,7 +46,7 @@ custom_style = """
         color: #333;
     }
 
-    /* 1. 상단 헤더 숨기기 & 여백 조정 (앱 느낌 나게) */
+    /* 1. 기본 헤더 숨기기 */
     header[data-testid="stHeader"] {
         visibility: hidden;
     }
@@ -54,13 +56,40 @@ custom_style = """
         max-width: 700px;
     }
 
-    /* 2. 타이틀 및 설명 중앙 정렬 */
+    /* 2. 로고 스타일 (KNOUAC) */
+    .knouac-logo {
+        font-size: 24px;
+        font-weight: 900;
+        color: #2c3e50;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* 3. ☰ 메뉴 버튼 커스텀 (st.popover 버튼 스타일 오버라이딩) */
+    /* 팝오버 버튼의 테두리와 배경을 없애서 텍스트 아이콘처럼 보이게 함 */
+    [data-testid="stPopover"] > button {
+        border: none !important;
+        background: transparent !important;
+        color: #555 !important;
+        font-size: 24px !important;
+        padding: 0px !important;
+        box-shadow: none !important;
+        margin-top: -5px; /* 위치 미세 조정 */
+    }
+    [data-testid="stPopover"] > button:hover {
+        color: #d9534f !important; /* 호버 시 색상 변경 */
+    }
+    
+    /* 4. 메인 타이틀 & 설명 */
     .main-title {
-        font-size: 26px; /* 요청하신대로 크기 축소 (-1) */
+        font-size: 26px;
         font-weight: 700;
         text-align: center;
         margin-bottom: 0.5rem;
         color: #111;
+        margin-top: 20px;
     }
     .sub-description {
         text-align: center;
@@ -70,7 +99,7 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 3. 업로드 박스 디자인 (스크린샷처럼 점선 박스) */
+    /* 5. 업로드 박스 디자인 */
     [data-testid="stFileUploader"] section {
         border: 2px dashed #ccc !important;
         background-color: #fafafa !important;
@@ -79,13 +108,13 @@ custom_style = """
         text-align: center;
     }
     [data-testid="stFileUploader"] section:hover {
-        border-color: #d9534f !important; /* 호버 시 포인트 컬러 */
+        border-color: #d9534f !important;
         background-color: #fff !important;
     }
 
-    /* 4. 버튼 디자인 (꽉 찬 버튼) */
+    /* 6. 버튼 디자인 */
     div.stButton > button[kind="primary"] {
-        background-color: #d9534f !important; /* 포인트 컬러 (붉은 계열) */
+        background-color: #d9534f !important;
         border: none;
         color: white;
         width: 100%;
@@ -100,7 +129,6 @@ custom_style = """
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     
-    /* 다운로드 버튼 (초록색) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none;
@@ -109,28 +137,12 @@ custom_style = """
         border-radius: 8px;
         font-weight: 600;
     }
-
-    /* 5. 네비게이션 바 시뮬레이션 (상단 로고 영역) */
-    .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 30px;
-    }
-    .logo {
-        font-weight: 800;
-        font-size: 18px;
-        color: #333;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .menu-icon {
-        font-size: 20px;
-        color: #999;
-        cursor: pointer;
+    
+    /* 구분선 스타일 */
+    hr {
+        margin-top: 0.5rem; 
+        margin-bottom: 1.5rem;
+        border-top: 1px solid #eee;
     }
 </style>
 """
@@ -220,63 +232,86 @@ def process_image_in_memory(uploaded_file):
     return [(fname_l, buf_l, img_l_pdf), (fname_r, buf_r, img_r_pdf)]
 
 # ==========================================
-# [UI] 화면 구성
+# [UI] 상단 네비게이션 바 (KNOUAC + Menu)
 # ==========================================
 
-# 1. 상단 네비게이션 바 (가짜 메뉴)
-st.markdown("""
-<div class="navbar">
-    <div class="logo">책 스캔 이미지 반반 분할기</div>
-    <div class="menu-icon">☰</div>
-</div>
-""", unsafe_allow_html=True)
+# st.columns를 사용하여 좌측 로고와 우측 메뉴 버튼 배치
+col_nav1, col_nav2 = st.columns([8, 1])
 
-# 2. 메인 타이틀 & 설명 (중앙 정렬)
+with col_nav1:
+    # 좌측: KNOUAC 로고
+    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
+
+with col_nav2:
+    # 우측: ☰ 팝오버 메뉴
+    # popover 기능 사용 (버튼 모양은 CSS로 투명하게 처리됨)
+    with st.popover("☰", use_container_width=True):
+        st.markdown("**Settings**")
+        
+        # 언어 선택
+        language = st.radio(
+            "Language",
+            ["Korean", "English"],
+            index=0 if st.session_state.language == 'Korean' else 1,
+            key='lang_select'
+        )
+        
+        # 언어 설정 저장 (선택 즉시 세션에 반영됨)
+        st.session_state.language = language
+        
+        st.divider()
+        st.caption("ver 1.0.0")
+
+st.markdown("<hr>", unsafe_allow_html=True) # 네비게이션 바 구분선
+
+# ==========================================
+# [UI] 메인 콘텐츠
+# ==========================================
+
+# 1. 메인 타이틀 & 설명 (중앙 정렬)
 st.markdown('<div class="main-title">책 스캔 이미지 분할기</div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="sub-description">
-    📖 두 쪽을 한 판에 스캔한 이미지를 업로드하면<br>
-    반반 잘라서 하나의 PDF로 합치거나 ZIP으로 다운로드를 제공합니다.
+    두 쪽을 한 판에 스캔한 이미지를 업로드하세요.<br>
+    자동으로 반으로 자르고, 번호를 인식해 파일명을 정리해 드립니다.
 </div>
 """, unsafe_allow_html=True)
 
-# 3. 파일 업로더
+# 2. 파일 업로더
 uploaded_files = st.file_uploader(
-    "이미지 파일 선택 (JPG, PNG, HEIC)",
+    "이미지 파일 선택",
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
     key=f"uploader_{st.session_state.uploader_key}",
-    label_visibility="collapsed" # 라벨 숨김 (깔끔하게)
+    label_visibility="collapsed"
 )
 
-# 4. 기능 컨트롤 영역 (파일이 올라오면 표시)
+# 3. 기능 컨트롤 영역
 if uploaded_files:
-    st.write("") # 여백
+    st.write("") 
     
-    # 박스 형태로 감싸기
     with st.container(border=True):
         col_opt, col_act = st.columns([1, 1.2], gap="large")
         
-        # [옵션] 체크박스 (No results 문제 해결)
+        # [옵션]
         with col_opt:
-            st.markdown("**저장 형식**", help="원하는 포맷을 선택하세요.")
+            st.markdown("**저장 형식**")
             c1, c2 = st.columns(2)
             with c1:
                 opt_pdf = st.checkbox("PDF", value=True)
             with c2:
                 opt_zip = st.checkbox("ZIP", value=False)
         
-        # [액션] 변환 or 다운로드
+        # [액션]
         with col_act:
-            st.write("") # 줄맞춤용 빈 공간
+            st.write("") 
             
-            # (A) 아직 처리 전 -> 변환 버튼
+            # (A) 변환 버튼
             if st.session_state.processed_data is None:
                 if st.button(f"✂️ SPLIT IMAGE ({len(uploaded_files)}장)", type="primary", use_container_width=True):
                     if not opt_pdf and not opt_zip:
-                        st.warning("⚠️ 저장할 형식을 선택해주세요 (PDF 또는 ZIP)")
+                        st.warning("⚠️ 저장할 형식을 선택해주세요")
                     else:
-                        # 변환 로직 시작
                         progress_bar = st.progress(0)
                         status_text = st.empty()
                         processed_list = []
@@ -284,11 +319,10 @@ if uploaded_files:
                         try:
                             total = len(uploaded_files)
                             for i, file in enumerate(uploaded_files):
-                                status_text.text(f"처리 중... {i+1} / {total}")
+                                status_text.text(f"Processing... {i+1} / {total}")
                                 results = process_image_in_memory(file)
                                 
                                 for fname, zip_buf, pdf_img in results:
-                                    # 중복 방지
                                     base, ext = os.path.splitext(fname)
                                     if any(x[0] == fname for x in processed_list):
                                         fname = f"{base}_{i}{ext}"
@@ -296,20 +330,18 @@ if uploaded_files:
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 완료 후 상태 저장 및 리로드
                             st.session_state.processed_data = processed_list
                             status_text.empty()
                             progress_bar.empty()
-                            st.rerun() # 화면 갱신 -> 다운로드 버튼 표시
+                            st.rerun()
                             
                         except Exception as e:
-                            st.error(f"오류 발생: {e}")
+                            st.error(f"Error: {e}")
 
-            # (B) 처리 완료 -> 다운로드 버튼
+            # (B) 다운로드 버튼
             else:
                 data_list = st.session_state.processed_data
                 
-                # PDF 다운로드
                 if opt_pdf:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
@@ -323,7 +355,6 @@ if uploaded_files:
                             use_container_width=True
                         )
 
-                # ZIP 다운로드
                 if opt_zip:
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zf:
@@ -338,8 +369,8 @@ if uploaded_files:
                         use_container_width=True
                     )
     
-    # 초기화 버튼
+    # 초기화
     if st.session_state.processed_data is not None:
         st.write("")
-        if st.button("🔄 처음으로 (새로고침)", on_click=reset_app, use_container_width=True):
+        if st.button("🔄 처음으로 (Reset)", on_click=reset_app, use_container_width=True):
             pass
