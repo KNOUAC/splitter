@@ -266,4 +266,183 @@ def resize_for_pdf(img):
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
     img = ImageOps.exif_transpose(img)
+    
+    # [수정된 부분] 들여쓰기 오류 해결
     if img.mode != 'RGB':
+        img = img.convert('RGB')
+    
+    w, h = img.size
+    c_x = w // 2
+    
+    img_l = img.crop((0, 0, c_x, h))
+    img_r = img.crop((c_x, 0, w, h))
+    
+    left_num = find_largest_number_across_corners(img_l)
+    right_num = find_largest_number_across_corners(img_r)
+    
+    name_only = os.path.splitext(uploaded_file.name)[0]
+    
+    if left_num and right_num:
+        fname_l, fname_r = f"{left_num}.jpg", f"{right_num}.jpg"
+    elif not left_num and right_num:
+        fname_l, fname_r = f"{int(right_num)-1}.jpg", f"{right_num}.jpg"
+    elif left_num and not right_num:
+        fname_l, fname_r = f"{left_num}.jpg", f"{int(left_num)+1}.jpg"
+    else:
+        fname_l, fname_r = f"{name_only}_L.jpg", f"{name_only}_R.jpg"
+        
+    buf_l = io.BytesIO()
+    img_l.save(buf_l, format="JPEG", quality=95)
+    
+    buf_r = io.BytesIO()
+    img_r.save(buf_r, format="JPEG", quality=95)
+    
+    img_l_pdf = resize_for_pdf(img_l)
+    img_r_pdf = resize_for_pdf(img_r)
+    
+    return [(fname_l, buf_l, img_l_pdf), (fname_r, buf_r, img_r_pdf)]
+
+# ==========================================
+# [UI] 상단 네비게이션 바 (Sticky Header)
+# ==========================================
+c1, c2 = st.columns([8, 1])
+
+with c1:
+    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
+
+with c2:
+    # ☰ 메뉴 팝오버
+    with st.popover("☰", use_container_width=False):
+        st.markdown(f"**{get_text('menu_settings')}**")
+        
+        # 언어 선택
+        new_lang = st.radio(
+            get_text('menu_lang'),
+            ["Korean", "English"],
+            index=0 if st.session_state.language == 'Korean' else 1,
+            key='lang_radio'
+        )
+        
+        if new_lang != st.session_state.language:
+            st.session_state.language = new_lang
+            st.rerun()
+
+        st.divider()
+        st.caption("ver 1.0.0")
+
+st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+# ==========================================
+# [UI] 메인 콘텐츠
+# ==========================================
+
+# 타이틀 & 설명
+st.markdown(f'<div class="main-title">{get_text("page_title")}</div>', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="sub-description">
+    {get_text("sub_description")}
+</div>
+""", unsafe_allow_html=True)
+
+# 파일 업로더
+uploaded_files = st.file_uploader(
+    get_text('upload_label'),
+    accept_multiple_files=True, 
+    type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
+    key=f"uploader_{st.session_state.uploader_key}",
+    label_visibility="collapsed"
+)
+
+# 기능 컨트롤 영역
+if uploaded_files:
+    st.write("") 
+    
+    with st.container(border=True):
+        col_opt, col_act = st.columns([1, 1.2], gap="large")
+        
+        # [옵션]
+        with col_opt:
+            st.markdown(f"**{get_text('format_label')}**")
+            c1, c2 = st.columns(2)
+            with c1:
+                opt_pdf = st.checkbox("PDF", value=True)
+            with c2:
+                opt_zip = st.checkbox("ZIP", value=False)
+        
+        # [액션]
+        with col_act:
+            st.write("") 
+            
+            # (A) 변환 시작
+            if st.session_state.processed_data is None:
+                btn_text_base = get_text('split_btn')
+                count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
+                
+                if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
+                    if not opt_pdf and not opt_zip:
+                        st.warning(get_text('warning_msg'))
+                    else:
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        processed_list = []
+                        
+                        try:
+                            total = len(uploaded_files)
+                            process_msg = get_text('processing_msg')
+                            
+                            for i, file in enumerate(uploaded_files):
+                                status_text.text(f"{process_msg} {i+1} / {total}")
+                                results = process_image_in_memory(file)
+                                
+                                for fname, zip_buf, pdf_img in results:
+                                    base, ext = os.path.splitext(fname)
+                                    if any(x[0] == fname for x in processed_list):
+                                        fname = f"{base}_{i}{ext}"
+                                    processed_list.append((fname, zip_buf, pdf_img))
+                                
+                                progress_bar.progress((i + 1) / total)
+                            
+                            st.session_state.processed_data = processed_list
+                            status_text.empty()
+                            progress_bar.empty()
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+
+            # (B) 다운로드
+            else:
+                data_list = st.session_state.processed_data
+                
+                if opt_pdf:
+                    pdf_buffer = io.BytesIO()
+                    pil_imgs = [item[2] for item in data_list]
+                    if pil_imgs:
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=100.0)
+                        st.download_button(
+                            label=get_text('download_pdf'),
+                            data=pdf_buffer.getvalue(),
+                            file_name="split_book.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+
+                if opt_zip:
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zf:
+                        for fname, z_buf, _ in data_list:
+                            zf.writestr(fname, z_buf.getvalue())
+                    
+                    st.download_button(
+                        label=get_text('download_zip'),
+                        data=zip_buffer.getvalue(),
+                        file_name="split_images.zip",
+                        mime="application/zip",
+                        use_container_width=True
+                    )
+    
+    # 초기화 버튼
+    if st.session_state.processed_data is not None:
+        st.write("")
+        if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
+            pass
