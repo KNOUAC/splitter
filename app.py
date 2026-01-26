@@ -56,8 +56,8 @@ TRANSLATIONS = {
         'English': 'Book scan image left-right splitter'
     },
     'sub_description': {
-        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공합니다.',
-        'English': 'Upload an image scanned with two pages on a single spread,<br> and it will be automatically split in half and delivered as a single PDF or a ZIP file.'
+        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공됩니다.',
+        'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.'
     },
     'upload_label': {
         'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
@@ -92,10 +92,9 @@ TRANSLATIONS = {
         'English': '🗑️ Reset (Start Over)'
     },
     'menu_settings': {
-        'Korean': '언어 (Language)',  # [수정] 설정 -> 언어로 변경
+        'Korean': '언어 (Language)', 
         'English': 'Language'
     },
-    # 'menu_lang' 키는 더 이상 UI에 표시되지 않으므로 삭제해도 무방하나, 로직 단순화를 위해 유지
     'menu_lang': {
         'Korean': '언어 (Language)',
         'English': 'Language'
@@ -323,19 +322,19 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 타이틀: "설정 (Settings)" -> "언어 (Language)"로 변경 (Trebuchet MS 적용)
+        # 🟢 [수정됨] 타이틀: "설정" -> "언어 (Language)"로 변경 (폰트 Trebuchet MS)
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
-        # 🟢 라디오 버튼: "언어 (Language)" 라벨 삭제 (label_visibility="collapsed")
+        # 🟢 [수정됨] 라벨 숨김 & 옵션 텍스트 원복 ("Korean", "English")
         new_lang = st.radio(
-            "Language",  # 내부 식별용 라벨 (화면엔 안 보임)
-            ["🇰🇷 Korean", "🇺🇸 English"],
+            "Language", 
+            ["Korean", "English"], # 이모지 제거하여 키값과 일치시킴
             index=0 if st.session_state.language == 'Korean' else 1,
             key='lang_radio',
-            label_visibility="collapsed"
+            label_visibility="collapsed" # 라디오 버튼 상단 텍스트 라인 삭제
         )
         
         if new_lang != st.session_state.language:
@@ -417,7 +416,7 @@ if uploaded_files:
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 파일명을 기준으로 자연 정렬 (1, 2, 10, 11...)
+                            # 파일명을 기준으로 자연 정렬 (1, 2, 10, 11...)
                             processed_list.sort(key=lambda x: natural_keys(x[0]))
                             
                             st.session_state.processed_data = processed_list
