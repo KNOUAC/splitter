@@ -407,10 +407,10 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [수정] 96.0 DPI (Window PC Standard)
-                        # 컴퓨터 화면의 표준 해상도입니다. 이것으로도 해결되지 않는다면
-                        # 뷰어의 렌더링 방식 차이로 인해 완벽한 일치는 불가능합니다.
-                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=96.0)
+                        # [최종 수정] resolution=200.0
+                        # "크롬 50% 줌에서 적당하다" -> 현재 크기의 절반으로 줄여야 함
+                        # 해상도를 2배(약 100->200)로 높이면 물리적 크기는 절반으로 줄어듭니다.
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
                             data=pdf_buffer.getvalue(),
