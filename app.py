@@ -31,9 +31,9 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
+    # on_click 콜백에서는 st.rerun()을 호출하지 않아도 자동으로 갱신됩니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
-    st.rerun()
 
 # ==========================================
 # [다국어 데이터]
@@ -44,20 +44,20 @@ TRANSLATIONS = {
         'English': 'Book scan image left-right splitter'
     },
     'sub_description': {
-        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공합니다.',
+        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP으로 다운로드 할 수 있습니다.',
         'English': 'Upload an image scanned with two pages on a single spread,<br> and it will be automatically split in half and delivered as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '이미지 파일 선택 (JPG, PNG, HEIC, BMP)',
-        'English': 'Select Image Files (JPG, PNG, HEIC, BMP)'
+        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC)',
+        'English': 'Touch here to select images (JPG, PNG, HEIC)'
     },
     'format_label': {
         'Korean': '저장 형식',
         'English': 'Save Format'
     },
     'split_btn': {
-        'Korean': '✂️ 이미지 분할하기',
-        'English': '✂️ SPLIT IMAGES'
+        'Korean': '✂️ 변환 시작하기',
+        'English': '✂️ START SPLITTING'
     },
     'warning_msg': {
         'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
@@ -94,7 +94,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (상단바 고정 및 업로더 스타일)
+# [스타일] CSS
 # ==========================================
 custom_style = """
 <style>
@@ -109,7 +109,7 @@ custom_style = """
         visibility: hidden;
     }
     
-    /* 상단 여백 조정 (커스텀 헤더 공간 확보) */
+    /* 상단 여백 조정 */
     .block-container {
         padding-top: 3rem !important;
         padding-bottom: 2rem !important;
@@ -179,9 +179,9 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 🟢 [수정됨] 업로드 박스 디자인 (점선 두께 4px로 증가) */
+    /* 🟢 업로드 박스 디자인 */
     [data-testid="stFileUploader"] section {
-        border: 4px dashed #ccc !important; /* 두께 변경 2px -> 4px */
+        border: 4px dashed #ccc !important;
         background-color: #fafafa !important;
         border-radius: 10px !important;
         padding: 40px 20px !important;
@@ -255,13 +255,8 @@ def find_largest_number_across_corners(half_image):
         return None
     return None
 
-def resize_for_pdf(img):
-    max_width = 1240
-    if img.width > max_width:
-        ratio = max_width / float(img.width)
-        new_height = int(float(img.height) * ratio)
-        return img.resize((max_width, new_height), Image.Resampling.LANCZOS)
-    return img
+# [수정] 원본 사이즈 유지를 위해 리사이징 함수 미사용 (함수는 남겨두되 호출하지 않거나 삭제 가능)
+# def resize_for_pdf(img): ... (삭제됨)
 
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
@@ -296,10 +291,11 @@ def process_image_in_memory(uploaded_file):
     buf_r = io.BytesIO()
     img_r.save(buf_r, format="JPEG", quality=95)
     
-    img_l_pdf = resize_for_pdf(img_l)
-    img_r_pdf = resize_for_pdf(img_r)
+    # [수정] PDF용 리사이징 과정 제거 -> 원본 이미지 객체(img_l, img_r)를 그대로 전달
+    # img_l_pdf = resize_for_pdf(img_l) 
+    # img_r_pdf = resize_for_pdf(img_r)
     
-    return [(fname_l, buf_l, img_l_pdf), (fname_r, buf_r, img_r_pdf)]
+    return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
 # [UI] 상단 네비게이션 바 (Sticky Header)
@@ -417,6 +413,7 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
+                        # [수정] 원본 해상도를 그대로 사용합니다. (resolution은 문서 표시 크기용 메타데이터입니다)
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=100.0)
                         st.download_button(
                             label=get_text('download_pdf'),
