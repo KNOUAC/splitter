@@ -93,7 +93,7 @@ TRANSLATIONS = {
     },
     'menu_settings': {
         'Korean': '언어 (Language)', 
-        'English': '언어 (Language)'  # [수정] English 선택 시에도 '언어 (Language)'로 고정
+        'English': '언어 (Language)' 
     },
     'menu_lang': {
         'Korean': '언어 (Language)',
@@ -181,6 +181,12 @@ custom_style = """
         font-family: 'Trebuchet MS', sans-serif !important;
     }
 
+    /* 🔵 [NEW] 라디오 버튼 선택 색상 변경 (Red -> Blue) */
+    div[role="radiogroup"] label[data-checked="true"] div:first-of-type {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+    }
+
     /* 메인 타이틀 */
     .main-title {
         font-size: 26px;
@@ -208,9 +214,11 @@ custom_style = """
         padding: 40px 20px !important;
         text-align: center;
     }
+    
+    /* 🔵 [NEW] 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
     [data-testid="stFileUploader"] section:hover {
-        border-color: #d9534f !important;
-        background-color: #fff !important;
+        border-color: #007bff !important; /* 파란색 */
+        background-color: #f0f8ff !important; /* 아주 연한 파랑 배경 */
     }
 
     /* 버튼 스타일 */
@@ -322,7 +330,7 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 타이틀: 항상 "언어 (Language)"로 고정됨
+        # 🟢 타이틀: 항상 "언어 (Language)"로 고정
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
@@ -342,6 +350,7 @@ with c2:
             st.rerun()
 
         st.divider()
+        # 🟢 버전 정보
         st.caption("ver 1.0.1 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
