@@ -94,7 +94,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (상단바 고정 및 업로더 스타일)
+# [스타일] CSS
 # ==========================================
 custom_style = """
 <style>
@@ -109,7 +109,7 @@ custom_style = """
         visibility: hidden;
     }
     
-    /* 상단 여백 조정 (커스텀 헤더 공간 확보) */
+    /* 상단 여백 조정 */
     .block-container {
         padding-top: 3rem !important;
         padding-bottom: 2rem !important;
@@ -179,7 +179,7 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 🟢 업로드 박스 디자인 (점선 두께 4px 유지) */
+    /* 🟢 업로드 박스 디자인 */
     [data-testid="stFileUploader"] section {
         border: 4px dashed #ccc !important;
         background-color: #fafafa !important;
@@ -407,10 +407,10 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [수정] 72.0 DPI (Screen Standard)
-                        # 이 설정을 통해 PDF 내 이미지의 물리적 크기(포인트)가 
-                        # 원본 이미지의 픽셀 크기와 1:1로 매핑됩니다. (ZIP 이미지와 동일한 뷰)
-                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=72.0)
+                        # [수정] 96.0 DPI (Window PC Standard)
+                        # 컴퓨터 화면의 표준 해상도입니다. 이것으로도 해결되지 않는다면
+                        # 뷰어의 렌더링 방식 차이로 인해 완벽한 일치는 불가능합니다.
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=96.0)
                         st.download_button(
                             label=get_text('download_pdf'),
                             data=pdf_buffer.getvalue(),
