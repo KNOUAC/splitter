@@ -8,21 +8,20 @@ from PIL import Image, ImageOps
 from pytesseract import Output
 from pillow_heif import register_heif_opener
 
-# HEIC 파일 지원
+# ==========================================
+# [기본 설정] HEIC 지원 및 페이지 설정
+# ==========================================
 register_heif_opener()
 
-# ==========================================
-# [설정] 페이지 기본 설정
-# ==========================================
 st.set_page_config(
     page_title="책 스캔 분할기", 
-    page_icon="📖",
+    page_icon="📚",
     layout="centered", 
     initial_sidebar_state="collapsed"
 )
 
 # ==========================================
-# [설정] 세션 상태 초기화 (새로고침 시 데이터 유지용)
+# [상태 관리] 세션 데이터 초기화
 # ==========================================
 if 'processed_data' not in st.session_state:
     st.session_state.processed_data = None
@@ -30,75 +29,108 @@ if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
 
 def reset_app():
-    # 초기화 버튼 누르면 상태 비우고 리로드
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
     st.rerun()
 
 # ==========================================
-# [설정] UI 디자인 (CSS 주입)
+# [스타일] CSS (웹 도구 스타일 적용)
 # ==========================================
 custom_style = """
 <style>
+    /* 기본 폰트 및 배경 */
     html, body, [class*="css"] {
-        font-family: 'Suit', sans-serif;
+        font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #333;
     }
 
-    /* 📤 업로드 박스 디자인 (점선 테두리) */
+    /* 1. 상단 헤더 숨기기 & 여백 조정 (앱 느낌 나게) */
+    header[data-testid="stHeader"] {
+        visibility: hidden;
+    }
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 700px;
+    }
+
+    /* 2. 타이틀 및 설명 중앙 정렬 */
+    .main-title {
+        font-size: 26px; /* 요청하신대로 크기 축소 (-1) */
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #111;
+    }
+    .sub-description {
+        text-align: center;
+        color: #666;
+        font-size: 15px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    /* 3. 업로드 박스 디자인 (스크린샷처럼 점선 박스) */
     [data-testid="stFileUploader"] section {
-        border: 2px dashed #a0a5b5 !important;
-        background-color: #fcfcfc !important;
-        border-radius: 12px !important;
-        padding: 30px 10px !important;
+        border: 2px dashed #ccc !important;
+        background-color: #fafafa !important;
+        border-radius: 10px !important;
+        padding: 40px 20px !important;
+        text-align: center;
     }
-    
-    [data-testid="stFileUploader"] section > div > div > svg {
-        fill: #7d8294 !important;
-    }
-
-    /* 🎛️ 컨트롤 박스 디자인 */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        border: 2px dashed #a0a5b5 !important;
-        border-radius: 12px !important;
-        background-color: #f8f9fa !important;
-        padding: 20px !important;
+    [data-testid="stFileUploader"] section:hover {
+        border-color: #d9534f !important; /* 호버 시 포인트 컬러 */
+        background-color: #fff !important;
     }
 
-    /* 변환 버튼 (빨간색) */
+    /* 4. 버튼 디자인 (꽉 찬 버튼) */
     div.stButton > button[kind="primary"] {
-        background-color: #d9534f !important;
-        border: none !important;
-        color: white !important;
-        width: 100% !important;
-        padding: 0.6rem 1rem !important;
-        font-weight: 600 !important;
-        margin-top: 5px !important;
+        background-color: #d9534f !important; /* 포인트 컬러 (붉은 계열) */
+        border: none;
+        color: white;
+        width: 100%;
+        padding: 0.7rem;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     div.stButton > button[kind="primary"]:hover {
         background-color: #c9302c !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-
-    /* 다운로드 버튼 (성공 시, 초록색 계열) */
+    
+    /* 다운로드 버튼 (초록색) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
-        border: none !important;
-        color: white !important;
-        width: 100% !important;
-        font-weight: 600 !important;
-    }
-    div.stDownloadButton > button:hover {
-        background-color: #218838 !important;
+        border: none;
+        color: white;
+        width: 100%;
+        border-radius: 8px;
+        font-weight: 600;
     }
 
-    /* 체크박스 디자인 조정 */
-    .stCheckbox {
-        padding-top: 5px;
+    /* 5. 네비게이션 바 시뮬레이션 (상단 로고 영역) */
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 30px;
     }
-
-    /* 모바일 최적화 */
-    @media only screen and (max-width: 640px) {
-        .block-container { padding-top: 2rem !important; }
-        div.stButton > button[kind="primary"] { font-size: 16px !important; }
+    .logo {
+        font-weight: 800;
+        font-size: 18px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .menu-icon {
+        font-size: 20px;
+        color: #999;
+        cursor: pointer;
     }
 </style>
 """
@@ -190,35 +222,124 @@ def process_image_in_memory(uploaded_file):
 # ==========================================
 # [UI] 화면 구성
 # ==========================================
-# [수정] st.title 대신 HTML로 폰트 크기를 26px 정도로 줄여서 표시 (기존보다 작게)
-st.markdown("<h2 style='font-size: 26px; font-weight: 700; margin-bottom: 10px;'>책 스캔 이미지 반반 분할기</h2>", unsafe_allow_html=True)
 
+# 1. 상단 네비게이션 바 (가짜 메뉴)
 st.markdown("""
-<div style="margin-bottom: 20px; color: #555;">
-    📖 두 쪽을 한 판에 스캔한 이미지를 업로드하면<br>
-    반반 잘라서 하나의 PDF로 합치거나 ZIP으로 다운로드 할 수 있습니다.
+<div class="navbar">
+    <div class="logo">책 스캔 이미지 반반 분할기</div>
+    <div class="menu-icon">☰</div>
 </div>
 """, unsafe_allow_html=True)
 
-# 1. 파일 업로더
+# 2. 메인 타이틀 & 설명 (중앙 정렬)
+st.markdown('<div class="main-title">책 스캔 이미지 분할기</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="sub-description">
+    📖 두 쪽을 한 판에 스캔한 이미지를 업로드하면<br>
+    반반 잘라서 하나의 PDF로 합치거나 ZIP으로 다운로드를 제공합니다.
+</div>
+""", unsafe_allow_html=True)
+
+# 3. 파일 업로더
 uploaded_files = st.file_uploader(
-    "이미지 업로드",
+    "이미지 파일 선택 (JPG, PNG, HEIC)",
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
     key=f"uploader_{st.session_state.uploader_key}",
-    label_visibility="collapsed"
+    label_visibility="collapsed" # 라벨 숨김 (깔끔하게)
 )
 
-# 파일 업로드 시 컨트롤 박스 표시
+# 4. 기능 컨트롤 영역 (파일이 올라오면 표시)
 if uploaded_files:
-    st.write("") 
+    st.write("") # 여백
     
+    # 박스 형태로 감싸기
     with st.container(border=True):
         col_opt, col_act = st.columns([1, 1.2], gap="large")
         
-        # [왼쪽] 옵션 선택 (체크박스로 변경하여 'No results' 문제 해결)
+        # [옵션] 체크박스 (No results 문제 해결)
         with col_opt:
-            st.markdown("**저장 포맷**")
-            sub_c1, sub_c2 = st.columns(2)
-            with sub_c1:
-                opt_pdf = st
+            st.markdown("**저장 형식**", help="원하는 포맷을 선택하세요.")
+            c1, c2 = st.columns(2)
+            with c1:
+                opt_pdf = st.checkbox("PDF", value=True)
+            with c2:
+                opt_zip = st.checkbox("ZIP", value=False)
+        
+        # [액션] 변환 or 다운로드
+        with col_act:
+            st.write("") # 줄맞춤용 빈 공간
+            
+            # (A) 아직 처리 전 -> 변환 버튼
+            if st.session_state.processed_data is None:
+                if st.button(f"✂️ SPLIT IMAGE ({len(uploaded_files)}장)", type="primary", use_container_width=True):
+                    if not opt_pdf and not opt_zip:
+                        st.warning("⚠️ 저장할 형식을 선택해주세요 (PDF 또는 ZIP)")
+                    else:
+                        # 변환 로직 시작
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        processed_list = []
+                        
+                        try:
+                            total = len(uploaded_files)
+                            for i, file in enumerate(uploaded_files):
+                                status_text.text(f"처리 중... {i+1} / {total}")
+                                results = process_image_in_memory(file)
+                                
+                                for fname, zip_buf, pdf_img in results:
+                                    # 중복 방지
+                                    base, ext = os.path.splitext(fname)
+                                    if any(x[0] == fname for x in processed_list):
+                                        fname = f"{base}_{i}{ext}"
+                                    processed_list.append((fname, zip_buf, pdf_img))
+                                
+                                progress_bar.progress((i + 1) / total)
+                            
+                            # 완료 후 상태 저장 및 리로드
+                            st.session_state.processed_data = processed_list
+                            status_text.empty()
+                            progress_bar.empty()
+                            st.rerun() # 화면 갱신 -> 다운로드 버튼 표시
+                            
+                        except Exception as e:
+                            st.error(f"오류 발생: {e}")
+
+            # (B) 처리 완료 -> 다운로드 버튼
+            else:
+                data_list = st.session_state.processed_data
+                
+                # PDF 다운로드
+                if opt_pdf:
+                    pdf_buffer = io.BytesIO()
+                    pil_imgs = [item[2] for item in data_list]
+                    if pil_imgs:
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=100.0)
+                        st.download_button(
+                            label="📕 PDF 다운로드",
+                            data=pdf_buffer.getvalue(),
+                            file_name="split_book.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+
+                # ZIP 다운로드
+                if opt_zip:
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zf:
+                        for fname, z_buf, _ in data_list:
+                            zf.writestr(fname, z_buf.getvalue())
+                    
+                    st.download_button(
+                        label="🗂️ ZIP 다운로드",
+                        data=zip_buffer.getvalue(),
+                        file_name="split_images.zip",
+                        mime="application/zip",
+                        use_container_width=True
+                    )
+    
+    # 초기화 버튼
+    if st.session_state.processed_data is not None:
+        st.write("")
+        if st.button("🔄 처음으로 (새로고침)", on_click=reset_app, use_container_width=True):
+            pass
