@@ -181,8 +181,20 @@ custom_style = """
         font-family: 'Trebuchet MS', sans-serif !important;
     }
 
-    /* 🔵 [NEW] 라디오 버튼 선택 색상 변경 (Red -> Blue) */
-    div[role="radiogroup"] label[data-checked="true"] div:first-of-type {
+    /* 🔵 [수정됨] 라디오 버튼 선택 색상 (Red -> Blue) 강제 적용 */
+    /* stRadio 내부의 checked 상태 라벨의 첫 번째 div(동그라미) 타겟팅 */
+    div[data-testid="stRadio"] label[data-checked="true"] > div:first-child {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+    }
+    /* 선택된 텍스트 색상도 파란색으로 변경 (선택 사항) */
+    div[data-testid="stRadio"] label[data-checked="true"] p {
+        color: #007bff !important;
+    }
+
+    /* 🔵 [추가] 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강제 적용 */
+    /* PDF, ZIP 체크박스도 일관성 있게 파란색으로 변경 */
+    div[data-testid="stCheckbox"] label[data-checked="true"] > div:first-child {
         background-color: #007bff !important;
         border-color: #007bff !important;
     }
@@ -215,7 +227,7 @@ custom_style = """
         text-align: center;
     }
     
-    /* 🔵 [NEW] 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
+    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
     [data-testid="stFileUploader"] section:hover {
         border-color: #007bff !important; /* 파란색 */
         background-color: #f0f8ff !important; /* 아주 연한 파랑 배경 */
