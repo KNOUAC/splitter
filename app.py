@@ -134,7 +134,7 @@ custom_style = """
     
     /* 로고 스타일 */
     .knouac-logo {
-        font-size: 22px;
+        font-size: 30px;
         font-weight: 900;
         color: #2c3e50;
         letter-spacing: -0.5px;
