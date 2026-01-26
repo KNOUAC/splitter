@@ -98,7 +98,7 @@ def get_text(key):
 # ==========================================
 custom_style = """
 <style>
-    /* 폰트 적용 */
+    /* 폰트 적용 (본문은 Suit/시스템 폰트) */
     html, body, [class*="css"] {
         font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #333;
@@ -132,12 +132,13 @@ custom_style = """
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 로고 스타일 */
+    /* 🟢 로고 스타일 (Impact 폰트 적용) */
     .knouac-logo {
-        font-size: 30px;
-        font-weight: 900;
+        font-family: 'Impact', sans-serif !important;
+        font-size: 32px; /* Impact는 약간 작게 보이는 경향이 있어 30->32로 미세 조정 */
+        font-weight: 400; /* Impact 자체가 굵으므로 weight는 일반으로 둠 */
         color: #2c3e50;
-        letter-spacing: -0.5px;
+        letter-spacing: 1px; /* Impact는 자간이 좁아서 살짝 띄워줌 */
         text-decoration: none;
     }
 
@@ -407,9 +408,7 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [최종 수정] resolution=200.0
-                        # "크롬 50% 줌에서 적당하다" -> 현재 크기의 절반으로 줄여야 함
-                        # 해상도를 2배(약 100->200)로 높이면 물리적 크기는 절반으로 줄어듭니다.
+                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화 크기)
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
