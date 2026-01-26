@@ -48,7 +48,7 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # ==========================================
-# [다국어 데이터] - 수정 요청 반영 완료
+# [다국어 데이터]
 # ==========================================
 TRANSLATIONS = {
     'page_title': {
@@ -92,9 +92,10 @@ TRANSLATIONS = {
         'English': '🗑️ Reset (Start Over)'
     },
     'menu_settings': {
-        'Korean': '설정 (Settings)',
-        'English': 'Settings'
+        'Korean': '언어 (Language)',  # [수정] 설정 -> 언어로 변경
+        'English': 'Language'
     },
+    # 'menu_lang' 키는 더 이상 UI에 표시되지 않으므로 삭제해도 무방하나, 로직 단순화를 위해 유지
     'menu_lang': {
         'Korean': '언어 (Language)',
         'English': 'Language'
@@ -322,18 +323,19 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 "설정 (Settings)" 텍스트에 Trebuchet MS 적용
+        # 🟢 타이틀: "설정 (Settings)" -> "언어 (Language)"로 변경 (Trebuchet MS 적용)
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
-        # 언어 선택
+        # 🟢 라디오 버튼: "언어 (Language)" 라벨 삭제 (label_visibility="collapsed")
         new_lang = st.radio(
-            get_text('menu_lang'),
-            ["Korean", "English"],
+            "Language",  # 내부 식별용 라벨 (화면엔 안 보임)
+            ["Korean 🇰🇷", "English 🇺🇸"],
             index=0 if st.session_state.language == 'Korean' else 1,
-            key='lang_radio'
+            key='lang_radio',
+            label_visibility="collapsed"
         )
         
         if new_lang != st.session_state.language:
