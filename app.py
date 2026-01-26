@@ -93,7 +93,7 @@ TRANSLATIONS = {
     },
     'menu_settings': {
         'Korean': '언어 (Language)', 
-        'English': 'Language'
+        'English': '언어 (Language)'  # [수정] English 선택 시에도 '언어 (Language)'로 고정
     },
     'menu_lang': {
         'Korean': '언어 (Language)',
@@ -322,19 +322,19 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 [수정됨] 타이틀: "설정" -> "언어 (Language)"로 변경 (폰트 Trebuchet MS)
+        # 🟢 타이틀: 항상 "언어 (Language)"로 고정됨
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
-        # 🟢 [수정됨] 라벨 숨김 & 옵션 텍스트 원복 ("Korean", "English")
+        # 🟢 라벨 숨김 & 옵션 텍스트 유지
         new_lang = st.radio(
             "Language", 
-            ["Korean", "English"], # 이모지 제거하여 키값과 일치시킴
+            ["Korean", "English"],
             index=0 if st.session_state.language == 'Korean' else 1,
             key='lang_radio',
-            label_visibility="collapsed" # 라디오 버튼 상단 텍스트 라인 삭제
+            label_visibility="collapsed"
         )
         
         if new_lang != st.session_state.language:
