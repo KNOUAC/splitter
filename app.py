@@ -9,7 +9,7 @@ from pytesseract import Output
 from pillow_heif import register_heif_opener
 
 # ==========================================
-# [기본 설정] HEIC 지원 및 페이지 설정
+# [기본 설정] 페이지 설정 및 초기화
 # ==========================================
 register_heif_opener()
 
@@ -21,14 +21,14 @@ st.set_page_config(
 )
 
 # ==========================================
-# [상태 관리] 세션 데이터 초기화
+# [상태 관리] 세션 데이터
 # ==========================================
 if 'processed_data' not in st.session_state:
     st.session_state.processed_data = None
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
 if 'language' not in st.session_state:
-    st.session_state.language = 'Korean' # 기본값: 한국어
+    st.session_state.language = 'Korean'
 
 def reset_app():
     st.session_state.processed_data = None
@@ -36,7 +36,7 @@ def reset_app():
     st.rerun()
 
 # ==========================================
-# [다국어 데이터] 텍스트 매핑
+# [다국어 데이터]
 # ==========================================
 TRANSLATIONS = {
     'page_title': {
@@ -80,62 +80,86 @@ TRANSLATIONS = {
         'English': '🔄 Reset (Start Over)'
     },
     'menu_settings': {
-        'Korean': '설정',
+        'Korean': '설정 (Settings)',
         'English': 'Settings'
     },
     'menu_lang': {
-        'Korean': '언어',
+        'Korean': '언어 (Language)',
         'English': 'Language'
     }
 }
 
 def get_text(key):
-    """현재 언어 설정에 맞는 텍스트 반환"""
     lang = st.session_state.language
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (웹 도구 스타일)
+# [스타일] CSS (상단바 고정 및 디자인)
 # ==========================================
 custom_style = """
 <style>
-    /* 기본 폰트 및 배경 */
+    /* 폰트 적용 */
     html, body, [class*="css"] {
         font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #333;
     }
 
-    /* 헤더 숨기기 */
-    header[data-testid="stHeader"] { visibility: hidden; }
+    /* Streamlit 기본 헤더 숨기기 */
+    header[data-testid="stHeader"] {
+        visibility: hidden;
+    }
+    
+    /* 상단 여백 조정 (커스텀 헤더 공간 확보) */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 3rem !important;
         padding-bottom: 2rem !important;
         max-width: 700px;
     }
 
+    /* 🟢 커스텀 상단바 컨테이너 (Sticky) */
+    .custom-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: white;
+        z-index: 9999;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
     /* 로고 스타일 */
     .knouac-logo {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 900;
         color: #2c3e50;
         letter-spacing: -0.5px;
-        display: flex;
-        align-items: center;
-        height: 100%;
+        text-decoration: none;
     }
 
     /* 팝오버(메뉴) 버튼 커스텀 */
+    [data-testid="stPopover"] {
+        display: flex;
+        justify-content: flex-end;
+    }
     [data-testid="stPopover"] > button {
         border: none !important;
         background: transparent !important;
-        color: #555 !important;
-        font-size: 24px !important;
-        padding: 0px !important;
-        box-shadow: none !important;
+        color: #333 !important;
+        font-size: 24px !important; /* 아이콘 크기 */
+        padding: 0 10px !important;
         margin-top: -5px;
+        box-shadow: none !important;
     }
-    [data-testid="stPopover"] > button:hover { color: #d9534f !important; }
-    
+    [data-testid="stPopover"] > button:hover {
+        color: #d9534f !important;
+        background: transparent !important;
+    }
+
     /* 메인 타이틀 */
     .main-title {
         font-size: 26px;
@@ -145,6 +169,7 @@ custom_style = """
         color: #111;
         margin-top: 20px;
     }
+    
     /* 설명 텍스트 */
     .sub-description {
         text-align: center;
@@ -167,7 +192,7 @@ custom_style = """
         background-color: #fff !important;
     }
 
-    /* 버튼 공통 */
+    /* 버튼 스타일 */
     div.stButton > button[kind="primary"] {
         background-color: #d9534f !important;
         border: none;
@@ -188,14 +213,12 @@ custom_style = """
         border-radius: 8px;
         font-weight: 600;
     }
-    
-    hr { margin-top: 0.5rem; margin-bottom: 1.5rem; border-top: 1px solid #eee; }
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
 # ==========================================
-# [로직] 이미지 처리 함수
+# [로직] 이미지 처리 함수 (OCR, PDF 등)
 # ==========================================
 def preprocess_image_for_ocr(img):
     if img.mode in ('RGBA', 'P'):
@@ -244,182 +267,3 @@ def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
     img = ImageOps.exif_transpose(img)
     if img.mode != 'RGB':
-        img = img.convert('RGB')
-    
-    w, h = img.size
-    c_x = w // 2
-    
-    img_l = img.crop((0, 0, c_x, h))
-    img_r = img.crop((c_x, 0, w, h))
-    
-    left_num = find_largest_number_across_corners(img_l)
-    right_num = find_largest_number_across_corners(img_r)
-    
-    name_only = os.path.splitext(uploaded_file.name)[0]
-    
-    if left_num and right_num:
-        fname_l, fname_r = f"{left_num}.jpg", f"{right_num}.jpg"
-    elif not left_num and right_num:
-        fname_l, fname_r = f"{int(right_num)-1}.jpg", f"{right_num}.jpg"
-    elif left_num and not right_num:
-        fname_l, fname_r = f"{left_num}.jpg", f"{int(left_num)+1}.jpg"
-    else:
-        fname_l, fname_r = f"{name_only}_L.jpg", f"{name_only}_R.jpg"
-        
-    buf_l = io.BytesIO()
-    img_l.save(buf_l, format="JPEG", quality=95)
-    
-    buf_r = io.BytesIO()
-    img_r.save(buf_r, format="JPEG", quality=95)
-    
-    img_l_pdf = resize_for_pdf(img_l)
-    img_r_pdf = resize_for_pdf(img_r)
-    
-    return [(fname_l, buf_l, img_l_pdf), (fname_r, buf_r, img_r_pdf)]
-
-# ==========================================
-# [UI] 상단 네비게이션
-# ==========================================
-col_nav1, col_nav2 = st.columns([8, 1])
-
-with col_nav1:
-    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
-
-with col_nav2:
-    # ☰ 메뉴 팝오버
-    with st.popover("☰", use_container_width=True):
-        st.markdown(f"**{get_text('menu_settings')}**")
-        
-        # 언어 선택 (변경 시 자동 rerun 됨)
-        new_lang = st.radio(
-            get_text('menu_lang'),
-            ["Korean", "English"],
-            index=0 if st.session_state.language == 'Korean' else 1,
-            key='lang_radio'
-        )
-        
-        # 언어 상태 업데이트
-        if new_lang != st.session_state.language:
-            st.session_state.language = new_lang
-            st.rerun() # 즉시 반영을 위해 재실행
-
-        st.divider()
-        st.caption("ver 1.0.0")
-
-st.markdown("<hr>", unsafe_allow_html=True)
-
-# ==========================================
-# [UI] 메인 콘텐츠 (언어 적용)
-# ==========================================
-
-# 1. 타이틀 & 설명
-st.markdown(f'<div class="main-title">{get_text("page_title")}</div>', unsafe_allow_html=True)
-st.markdown(f"""
-<div class="sub-description">
-    {get_text("sub_description")}
-</div>
-""", unsafe_allow_html=True)
-
-# 2. 파일 업로더
-uploaded_files = st.file_uploader(
-    get_text('upload_label'),
-    accept_multiple_files=True, 
-    type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
-    key=f"uploader_{st.session_state.uploader_key}",
-    label_visibility="collapsed"
-)
-
-# 3. 기능 컨트롤 영역
-if uploaded_files:
-    st.write("") 
-    
-    with st.container(border=True):
-        col_opt, col_act = st.columns([1, 1.2], gap="large")
-        
-        # [옵션]
-        with col_opt:
-            st.markdown(f"**{get_text('format_label')}**")
-            c1, c2 = st.columns(2)
-            with c1:
-                opt_pdf = st.checkbox("PDF", value=True)
-            with c2:
-                opt_zip = st.checkbox("ZIP", value=False)
-        
-        # [액션]
-        with col_act:
-            st.write("") 
-            
-            # (A) 변환 버튼
-            if st.session_state.processed_data is None:
-                # 버튼 텍스트 동적 생성 (장수 포함)
-                btn_text_base = get_text('split_btn')
-                count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
-                
-                if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
-                    if not opt_pdf and not opt_zip:
-                        st.warning(get_text('warning_msg'))
-                    else:
-                        progress_bar = st.progress(0)
-                        status_text = st.empty()
-                        processed_list = []
-                        
-                        try:
-                            total = len(uploaded_files)
-                            process_msg = get_text('processing_msg')
-                            
-                            for i, file in enumerate(uploaded_files):
-                                status_text.text(f"{process_msg} {i+1} / {total}")
-                                results = process_image_in_memory(file)
-                                
-                                for fname, zip_buf, pdf_img in results:
-                                    base, ext = os.path.splitext(fname)
-                                    if any(x[0] == fname for x in processed_list):
-                                        fname = f"{base}_{i}{ext}"
-                                    processed_list.append((fname, zip_buf, pdf_img))
-                                
-                                progress_bar.progress((i + 1) / total)
-                            
-                            st.session_state.processed_data = processed_list
-                            status_text.empty()
-                            progress_bar.empty()
-                            st.rerun()
-                            
-                        except Exception as e:
-                            st.error(f"Error: {e}")
-
-            # (B) 다운로드 버튼
-            else:
-                data_list = st.session_state.processed_data
-                
-                if opt_pdf:
-                    pdf_buffer = io.BytesIO()
-                    pil_imgs = [item[2] for item in data_list]
-                    if pil_imgs:
-                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=100.0)
-                        st.download_button(
-                            label=get_text('download_pdf'),
-                            data=pdf_buffer.getvalue(),
-                            file_name="split_book.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-
-                if opt_zip:
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, "w") as zf:
-                        for fname, z_buf, _ in data_list:
-                            zf.writestr(fname, z_buf.getvalue())
-                    
-                    st.download_button(
-                        label=get_text('download_zip'),
-                        data=zip_buffer.getvalue(),
-                        file_name="split_images.zip",
-                        mime="application/zip",
-                        use_container_width=True
-                    )
-    
-    # 초기화
-    if st.session_state.processed_data is not None:
-        st.write("")
-        if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
-            pass
