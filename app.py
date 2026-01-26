@@ -36,7 +36,19 @@ def reset_app():
     st.session_state.uploader_key += 1
 
 # ==========================================
-# [다국어 데이터]
+# [유틸] 자연 정렬 (Natural Sort) 함수
+# ==========================================
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) -> 1, 2, 10, 11, ... 순서로 정렬됨
+    '''
+    return [atoi(c) for c in re.split(r'(\d+)', text)]
+
+# ==========================================
+# [다국어 데이터] - 수정 요청 반영 완료
 # ==========================================
 TRANSLATIONS = {
     'page_title': {
@@ -48,16 +60,16 @@ TRANSLATIONS = {
         'English': 'Upload an image scanned with two pages on a single spread,<br> and it will be automatically split in half and delivered as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC)',
-        'English': 'Touch here to select images (JPG, PNG, HEIC)'
+        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
+        'English': 'Touch here to select images (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
         'English': 'Save Format'
     },
     'split_btn': {
-        'Korean': '䷢ 변환 시작하기',
-        'English': '䷢ START SPLITTING'
+        'Korean': '⌖ 변환 시작하기',
+        'English': '⌖ Start splitting'
     },
     'warning_msg': {
         'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
@@ -161,7 +173,7 @@ custom_style = """
         background: transparent !important;
     }
 
-    /* 🟢 [NEW] 설정 메뉴 내부 (라디오 버튼 등) 폰트 변경: Trebuchet MS */
+    /* 🟢 설정 메뉴 내부 (라디오 버튼 등) 폰트 변경: Trebuchet MS */
     [data-testid="stRadio"], 
     [data-testid="stRadio"] label, 
     [data-testid="stRadio"] div, 
@@ -297,7 +309,6 @@ def process_image_in_memory(uploaded_file):
     buf_r = io.BytesIO()
     img_r.save(buf_r, format="JPEG", quality=95)
     
-    # PDF 생성을 위해 원본 이미지 객체 그대로 반환
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
@@ -311,13 +322,13 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 [NEW] "설정 (Settings)" 텍스트에 Trebuchet MS 적용
+        # 🟢 "설정 (Settings)" 텍스트에 Trebuchet MS 적용
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
-        # 언어 선택 (CSS로 Trebuchet MS 적용됨)
+        # 언어 선택
         new_lang = st.radio(
             get_text('menu_lang'),
             ["Korean", "English"],
@@ -403,6 +414,9 @@ if uploaded_files:
                                     processed_list.append((fname, zip_buf, pdf_img))
                                 
                                 progress_bar.progress((i + 1) / total)
+                            
+                            # 🟢 파일명을 기준으로 자연 정렬 (1, 2, 10, 11...)
+                            processed_list.sort(key=lambda x: natural_keys(x[0]))
                             
                             st.session_state.processed_data = processed_list
                             status_text.empty()
