@@ -144,7 +144,7 @@ custom_style = """
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 🟢 로고 스타일 (Impact 폰트) */
+    /* 🟢 로고 스타일 (Impact 폰트 - 음영 제거) */
     .knouac-logo {
         font-family: 'Impact', sans-serif !important;
         font-size: 32px;
@@ -181,20 +181,19 @@ custom_style = """
         font-family: 'Trebuchet MS', sans-serif !important;
     }
 
-    /* 🔵 [수정됨] 라디오 버튼 선택 색상 (Red -> Blue) 강제 적용 */
-    /* stRadio 내부의 checked 상태 라벨의 첫 번째 div(동그라미) 타겟팅 */
-    div[data-testid="stRadio"] label[data-checked="true"] > div:first-child {
+    /* 🔵 [수정됨] 라디오 버튼 선택 색상 (Red -> Blue) 강력 적용 */
+    /* Streamlit 라디오 버튼의 체크된 상태의 원(circle) 부분 */
+    div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
     }
-    /* 선택된 텍스트 색상도 파란색으로 변경 (선택 사항) */
+    /* 텍스트 색상도 파란색으로 (선택사항) */
     div[data-testid="stRadio"] label[data-checked="true"] p {
         color: #007bff !important;
     }
 
-    /* 🔵 [추가] 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강제 적용 */
-    /* PDF, ZIP 체크박스도 일관성 있게 파란색으로 변경 */
-    div[data-testid="stCheckbox"] label[data-checked="true"] > div:first-child {
+    /* 🔵 [추가] 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강력 적용 */
+    div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
     }
@@ -379,13 +378,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 파일 업로더
+# 🔵 [수정됨] 파일 업로더 라벨 분리 (상태 유지를 위해)
+# 1. 화면에 보이는 라벨(텍스트)은 HTML로 별도로 그립니다.
+st.markdown(
+    f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
+    unsafe_allow_html=True
+)
+
+# 2. 실제 업로더는 고정된 label("static_label")을 사용하여 언어 변경 시에도 ID가 변하지 않게 합니다.
 uploaded_files = st.file_uploader(
-    get_text('upload_label'),
+    "static_label", # 이 값이 바뀌지 않아야 Streamlit이 같은 위젯으로 인식함
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
     key=f"uploader_{st.session_state.uploader_key}",
-    label_visibility="collapsed"
+    label_visibility="collapsed" # 실제 라벨은 숨김
 )
 
 # 기능 컨트롤 영역
