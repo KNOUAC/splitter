@@ -40,16 +40,16 @@ def reset_app():
 # ==========================================
 TRANSLATIONS = {
     'page_title': {
-        'Korean': '책 스캔 이미지 분할기',
-        'English': 'Book Scan Image Splitter'
+        'Korean': '책 스캔 이미지 반반 분할기',
+        'English': 'Book scan image left-right splitter'
     },
     'sub_description': {
-        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하세요.<br>자동으로 반으로 자르고, 번호를 인식해 파일명을 정리해 드립니다.',
-        'English': 'Upload scanned images containing two pages.<br>It automatically splits them in half and organizes filenames by detecting page numbers.'
+        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공합니다.',
+        'English': 'Upload an image scanned with two pages on a single spread,<br> and it will be automatically split in half and delivered as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '이미지 파일 선택 (JPG, PNG, HEIC)',
-        'English': 'Select Image Files (JPG, PNG, HEIC)'
+        'Korean': '이미지 파일 선택 (JPG, PNG, HEIC, BMP)',
+        'English': 'Select Image Files (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
@@ -94,7 +94,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (상단바 고정 및 디자인)
+# [스타일] CSS (상단바 고정 및 업로더 스타일)
 # ==========================================
 custom_style = """
 <style>
@@ -179,9 +179,9 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 업로드 박스 */
+    /* 🟢 [수정됨] 업로드 박스 디자인 (점선 두께 4px로 증가) */
     [data-testid="stFileUploader"] section {
-        border: 2px dashed #ccc !important;
+        border: 4px dashed #ccc !important; /* 두께 변경 2px -> 4px */
         background-color: #fafafa !important;
         border-radius: 10px !important;
         padding: 40px 20px !important;
@@ -267,7 +267,6 @@ def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
     img = ImageOps.exif_transpose(img)
     
-    # [수정된 부분] 들여쓰기 오류 해결
     if img.mode != 'RGB':
         img = img.convert('RGB')
     
