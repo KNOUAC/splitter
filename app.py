@@ -44,7 +44,7 @@ TRANSLATIONS = {
         'English': 'Book scan image left-right splitter'
     },
     'sub_description': {
-        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공합니다.'',
+        'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공합니다.',
         'English': 'Upload an image scanned with two pages on a single spread,<br> and it will be automatically split in half and delivered as a single PDF or a ZIP file.'
     },
     'upload_label': {
