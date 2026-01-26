@@ -332,7 +332,7 @@ with c2:
         # 🟢 라디오 버튼: "언어 (Language)" 라벨 삭제 (label_visibility="collapsed")
         new_lang = st.radio(
             "Language",  # 내부 식별용 라벨 (화면엔 안 보임)
-            ["Korean 🇰🇷", "English 🇺🇸"],
+            ["🇰🇷 Korean", "🇺🇸 English"],
             index=0 if st.session_state.language == 'Korean' else 1,
             key='lang_radio',
             label_visibility="collapsed"
