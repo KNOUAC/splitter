@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNOUAC Book Splitter</title>
+    
+    <script src="https://unpkg.com/tesseract.js@v5.0.3/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+    <style>
+        /* 폰트 및 기본 스타일 (app.py의 custom_style 이식) */
+        @import url("https://cdn.jsdelivr.net/gh/sun-typeface/SUIT/fonts/variable/woff2/SUIT-Variable.css");
+
+        :root {
+            --primary-red: #d9534f;
+            --primary-red-hover: #c9302c;
+            --primary-blue: #007bff;
+            --bg-blue-light: #f0f8ff;
+            --success-green: #28a745;
+        }
+
+        body {
+            font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #333;
+            margin: 0;
+            padding-top: 80px; /* 상단바 공간 확보 */
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 상단 네비게이션 바 (Sticky Header) */
+        .custom-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: white;
+            z-index: 9999;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .knouac-logo {
+            font-family: 'Impact', sans-serif;
+            font-size: 32px;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            width: 100%;
+            max-width: 700px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .main-title {
+            font-size: 26px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #111;
+        }
+
+        .sub-description {
+            text-align: center;
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* 업로드 박스 */
+        .upload-area {
+            border: 4px dashed #ccc;
+            background-color: #fafafa;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover {
+            border-color: var(--primary-blue);
+            background-color: var(--bg-blue-light);
+        }
+        .upload-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 옵션 및 버튼 영역 */
+        .controls-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* 파일 선택 전엔 숨김 */
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .checkbox-group label {
+            margin-right: 15px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            color: white;
+        }
+        .btn-primary:hover { background-color: var(--primary-red-hover); }
+        .btn-primary:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .btn-success {
+            background-color: var(--success-green);
+            color: white;
+            margin-top: 10px;
+        }
+
+        /* 진행률 표시 */
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-blue);
+            transition: width 0.3s;
+        }
+        .status-text {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 8px;
+            color: #666;
+        }
+
+        /* 유틸 */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="custom-navbar">
+        <div class="knouac-logo">KNOUAC</div>
+    </div>
+
+    <div class="container">
+        <div class="main-title">책 스캔 이미지 반반 분할기</div>
+        <div class="sub-description">
+            두 쪽을 한 판에 스캔한 이미지를 업로드하면<br>
+            반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공됩니다.
+        </div>
+
+        <div class="upload-label" style="text-align: center; margin-bottom: 10px;">
+            여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)
+        </div>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <span style="font-size: 40px;">📂</span><br>
+            <span id="fileCountText">클릭하여 파일 업로드</span>
+            <input type="file" id="fileInput" multiple accept="image/*,.heic" class="hidden">
+        </div>
+
+        <div id="controlsBox" class="controls-box">
+            <div class="flex-row">
+                <div class="checkbox-group">
+                    <strong>저장 형식:</strong> &nbsp;
+                    <label><input type="checkbox" id="chkPdf" checked> PDF</label>
+                    <label><input type="checkbox" id="chkZip"> ZIP</label>
+                </div>
+                <div class="checkbox-group" style="font-size:13px; color:#666;">
+                   <label><input type="checkbox" id="chkOcr"> 페이지 번호 자동 인식 (느림)</label>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button id="startBtn" class="btn-primary">⌖ 변환 시작하기</button>
+            </div>
+        </div>
+
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+            <div id="statusText" class="status-text">준비 중...</div>
+        </div>
+
+        <div id="downloadArea" style="margin-top: 20px;"></div>
+    </div>
+
+<script>
+    // === 상태 관리 변수 ===
+    let selectedFiles = [];
+    let processedPages = []; // { name: '10.jpg', blob: Blob, ... }
+
+    // === DOM 요소 ===
+    const fileInput = document.getElementById('fileInput');
+    const controlsBox = document.getElementById('controlsBox');
+    const fileCountText = document.getElementById('fileCountText');
+    const startBtn = document.getElementById('startBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const statusText = document.getElementById('statusText');
+    const downloadArea = document.getElementById('downloadArea');
+    const chkOcr = document.getElementById('chkOcr');
+
+    // === 이벤트 리스너 ===
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            selectedFiles = Array.from(e.target.files);
+            fileCountText.innerText = `${selectedFiles.length}개의 파일이 선택됨`;
+            controlsBox.style.display = 'block';
+            
+            // UI 초기화
+            downloadArea.innerHTML = '';
+            progressContainer.style.display = 'none';
+        }
+    });
+
+    startBtn.addEventListener('click', async () => {
+        const wantPdf = document.getElementById('chkPdf').checked;
+        const wantZip = document.getElementById('chkZip').checked;
+
+        if (!wantPdf && !wantZip) {
+            alert('⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)');
+            return;
+        }
+
+        // 변환 시작
+        startBtn.disabled = true;
+        downloadArea.innerHTML = '';
+        processedPages = [];
+        progressContainer.style.display = 'block';
+        
+        try {
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                updateProgress(i, selectedFiles.length, `${i + 1}번째 이미지 처리 중... (${file.name})`);
+                
+                // 1. 이미지 로드 (HEIC 변환 포함)
+                const imgElement = await loadImage(file);
+                
+                // 2. 반반 자르기 및 OCR
+                await splitAndProcess(imgElement, file.name, i);
+            }
+
+            // 3. 정렬 (Natural Sort)
+            processedPages.sort((a, b) => naturalCompare(a.name, b.name));
+
+            updateProgress(100, 100, '변환 완료! 파일을 생성 중입니다...');
+            
+            // 4. 결과물 생성
+            await generateDownloads(wantPdf, wantZip);
+            
+            statusText.innerText = "모든 작업이 완료되었습니다.";
+
+        } catch (err) {
+            console.error(err);
+            alert('작업 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            startBtn.disabled = false;
+        }
+    });
+
+    // === 핵심 로직 함수들 ===
+
+    // 이미지 로드 (HEIC 지원)
+    async function loadImage(file) {
+        let blob = file;
+        // HEIC 파일인 경우 변환
+        if (file.name.toLowerCase().endsWith('.heic')) {
+            statusText.innerText += ' (HEIC 변환 중...)';
+            const converted = await heic2any({ blob: file, toType: "image/jpeg" });
+            blob = Array.isArray(converted) ? converted[0] : converted;
+        }
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // 이미지 분할 및 OCR 처리
+    async function splitAndProcess(img, originalName, index) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const w = img.width;
+        const h = img.height;
+        const halfW = Math.floor(w / 2);
+
+        // 왼쪽(L), 오른쪽(R) 순서
+        const sides = [
+            { id: 'L', sx: 0 },
+            { id: 'R', sx: halfW }
+        ];
+
+        for (const side of sides) {
+            // 캔버스 크기 설정 및 이미지 그리기
+            canvas.width = halfW;
+            canvas.height = h;
+            ctx.drawImage(img, side.sx, 0, halfW, h, 0, 0, halfW, h);
+
+            let finalName = "";
+            let pageNum = null;
+
+            // OCR 실행 여부 확인
+            if (chkOcr.checked) {
+                // 파이썬 로직: 하단 15% 영역 크롭
+                const cropH = Math.floor(h * 0.15);
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = halfW;
+                cropCanvas.height = cropH;
+                const cropCtx = cropCanvas.getContext('2d');
+                // 하단 부분만 복사
+                cropCtx.drawImage(canvas, 0, h - cropH, halfW, cropH, 0, 0, halfW, cropH);
+
+                // OCR 수행 (타임아웃 적용)
+                pageNum = await runSafeOCR(cropCanvas);
+            }
+
+            if (pageNum) {
+                finalName = `${pageNum}.jpg`;
+            } else {
+                // 인식 실패 시 기본 이름: 파일명_인덱스_L/R.jpg
+                const cleanName = originalName.split('.')[0];
+                finalName = `${cleanName}_${index}_${side.id}.jpg`;
+            }
+
+            // Blob 변환
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+            processedPages.push({ name: finalName, blob: blob, w: halfW, h: h });
+        }
+    }
+
+    // 안전한 OCR (타임아웃 포함)
+    async function runSafeOCR(canvas) {
+        // Tesseract.js 작업
+        const workerPromise = Tesseract.recognize(canvas, 'eng', {
+            tessedit_char_whitelist: '0123456789' // 숫자만 인식
+        });
+
+        // 3초 타임아웃
+        const timeoutPromise = new Promise((resolve) => {
+            setTimeout(() => resolve({ data: { text: "" } }), 3000);
+        });
+
+        try {
+            // 둘 중 먼저 끝나는 것 채택
+            const { data: { text } } = await Promise.race([workerPromise, timeoutPromise]);
+            const num = text.replace(/\D/g, ''); // 숫자 이외 제거
+            return num.length > 0 ? num : null;
+        } catch (e) {
+            console.log("OCR Error/Skipped");
+            return null;
+        }
+    }
+
+    // 결과물 생성 및 다운로드 버튼 표시
+    async function generateDownloads(wantPdf, wantZip) {
+        // 1. PDF 생성
+        if (wantPdf) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            for (let i = 0; i < processedPages.length; i++) {
+                const page = processedPages[i];
+                const imgData = await blobToBase64(page.blob);
+                
+                // PDF 페이지 크기를 이미지 비율에 맞춤
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (page.h * pdfWidth) / page.w;
+
+                if (i > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+            
+            createDownloadBtn('📗 PDF 다운로드', () => doc.save('split_book.pdf'));
+        }
+
+        // 2. ZIP 생성
+        if (wantZip) {
+            const zip = new JSZip();
+            processedPages.forEach(p => {
+                zip.file(p.name, p.blob);
+            });
+            
+            const content = await zip.generateAsync({ type: "blob" });
+            createDownloadBtn('🗂️ ZIP 다운로드', () => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = "split_images.zip";
+                link.click();
+            });
+        }
+    }
+
+    // 유틸리티 함수들
+    function updateProgress(curr, total, msg) {
+        const percent = Math.round((curr / total) * 100);
+        progressFill.style.width = `${percent}%`;
+        statusText.innerText = msg;
+    }
+
+    function createDownloadBtn(label, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-success';
+        btn.innerText = label;
+        btn.onclick = onClick;
+        downloadArea.appendChild(btn);
+    }
+
+    function blobToBase64(blob) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // 자연 정렬 (1, 2, 10, 11)
+    function naturalCompare(a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    }
+</script>
+
+</body>
+</html>
