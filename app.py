@@ -61,7 +61,7 @@ TRANSLATIONS = {
     },
     'upload_label': {
         'Korean': '아래를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
-        'English': 'Tap below to select an image (JPG, PNG, HEIC, BMP)'
+        'English': 'Tap below to select your images (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
