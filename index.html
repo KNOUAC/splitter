@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNOUAC Book Splitter (JS)</title>
+    <script src="https://unpkg.com/tesseract.js@v5.0.3/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    
+    <style>
+        :root { --blue: #007bff; --red: #d9534f; --green: #28a745; }
+        body { font-family: 'Suit', sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; color: #333; line-height: 1.6; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .logo { font-family: 'Impact', sans-serif; font-size: 32px; color: #2c3e50; }
+        .upload-box { border: 4px dashed #ccc; padding: 40px; text-align: center; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .upload-box:hover { border-color: var(--blue); background-color: #f0f8ff; }
+        .controls { margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: none; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
+        .btn-primary { background-color: var(--red); }
+        .btn-success { background-color: var(--green); }
+        .progress-container { margin-top: 20px; display: none; }
+        .progress-bar { width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--blue); transition: 0.2s; }
+        #status { font-size: 14px; margin-top: 5px; text-align: center; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">KNOUAC</div>
+    <h2>책 스캔 이미지 반반 분할기</h2>
+    <p>이미지를 업로드하면 페이지별로 잘라 PDF/ZIP으로 변환합니다.</p>
+</div>
+
+<div class="upload-box" onclick="document.getElementById('fileInput').click()">
+    <strong>여기를 클릭하여 이미지 선택</strong><br>
+    (JPG, PNG, HEIC, BMP 지원)
+    <input type="file" id="fileInput" multiple accept="image/*,.heic">
+</div>
+
+<div id="controls" class="controls">
+    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+        <label><input type="checkbox" id="optPdf" checked> PDF 생성</label>
+        <label><input type="checkbox" id="optZip"> ZIP 생성</label>
+    </div>
+    <button id="startBtn" class="btn btn-primary">⌖ 변환 시작하기</button>
+</div>
+
+<div id="progressContainer" class="progress-container">
+    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    <div id="status">준비 중...</div>
+</div>
+
+<div id="downloadArea" style="margin-top: 20px;"></div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const startBtn = document.getElementById('startBtn');
+    const status = document.getElementById('status');
+    const progressFill = document.getElementById('progressFill');
+    const downloadArea = document.getElementById('downloadArea');
+
+    let processedPages = []; // {name, blob, imgData}
+
+    fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) controls.style.display = 'block';
+    };
+
+    startBtn.onclick = async () => {
+        const files = Array.from(fileInput.files);
+        if (files.length === 0) return;
+
+        downloadArea.innerHTML = '';
+        processedPages = [];
+        document.getElementById('progressContainer').style.display = 'block';
+        startBtn.disabled = true;
+
+        for (let i = 0; i < files.length; i++) {
+            updateProgress(i, files.length, `${i + 1}번째 이미지 처리 중...`);
+            let file = files[i];
+
+            // 1. HEIC 변환 체크
+            if (file.name.toLowerCase().endsWith('.heic')) {
+                const converted = await heic2any({ blob: file, toType: "image/jpeg" });
+                file = Array.isArray(converted) ? converted[0] : converted;
+            }
+
+            const img = await loadImage(file);
+            await splitAndProcess(img, file.name, i);
+        }
+
+        // 파일명 기준 정렬 (Natural Sort)
+        processedPages.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
+
+        generateButtons();
+        updateProgress(1, 1, "변환 완료!");
+        startBtn.disabled = false;
+    };
+
+    function loadImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function splitAndProcess(img, originalName) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const w = img.width;
+        const h = img.height;
+        const halfW = Math.floor(w / 2);
+
+        const sides = [
+            { name: 'L', x: 0 },
+            { name: 'R', x: halfW }
+        ];
+
+        for (const side of sides) {
+            canvas.width = halfW;
+            canvas.height = h;
+            ctx.drawImage(img, side.x, 0, halfW, h, 0, 0, halfW, h);
+
+            // OCR용 페이지 번호 추출 (하단 15% 영역)
+            const pageNum = await recognizePageNumber(canvas);
+            const finalName = pageNum ? `${pageNum}.jpg` : `${originalName.split('.')[0]}_${side.name}.jpg`;
+            
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9));
+            processedPages.push({ name: finalName, blob: blob, width: halfW, height: h });
+        }
+    }
+
+    async function recognizePageNumber(canvas) {
+        try {
+            const tempCanvas = document.createElement('canvas');
+            const tCtx = tempCanvas.getContext('2d');
+            const cropH = canvas.height * 0.15;
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = cropH;
+            
+            // 하단 15%만 복사
+            tCtx.drawImage(canvas, 0, canvas.height - cropH, canvas.width, cropH, 0, 0, canvas.width, cropH);
+
+            const { data: { text } } = await Tesseract.recognize(tempCanvas, 'eng', {
+                // 숫자만 인식하도록 화이트리스트 설정
+                tessedit_char_whitelist: '0123456789'
+            });
+            return text.replace(/\D/g, '').slice(0, 4); // 숫자만 최대 4자리
+        } catch (e) { return null; }
+    }
+
+    function generateButtons() {
+        if (document.getElementById('optPdf').checked) {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-success';
+            btn.innerText = '📗 PDF 다운로드';
+            btn.onclick = downloadPdf;
+            downloadArea.appendChild(btn);
+        }
+        if (document.getElementById('optZip').checked) {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-success';
+            btn.innerText = '🗂️ ZIP 다운로드';
+            btn.onclick = downloadZip;
+            downloadArea.appendChild(btn);
+        }
+    }
+
+    async function downloadPdf() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        for (let i = 0; i < processedPages.length; i++) {
+            const page = processedPages[i];
+            const imgData = await new Promise(res => {
+                const reader = new FileReader();
+                reader.onload = (e) => res(e.target.result);
+                reader.readAsDataURL(page.blob);
+            });
+
+            // PDF 페이지 크기를 이미지 비율에 맞춤
+            const pdfW = doc.internal.pageSize.getWidth();
+            const pdfH = (page.height * pdfW) / page.width;
+            
+            if (i > 0) doc.addPage();
+            doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+        }
+        doc.save('split_book.pdf');
+    }
+
+    async function downloadZip() {
+        const zip = new JSZip();
+        processedPages.forEach(p => zip.file(p.name, p.blob));
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "split_images.zip";
+        link.click();
+    }
+
+    function updateProgress(curr, total, msg) {
+        const percent = (curr / total) * 100;
+        progressFill.style.width = percent + '%';
+        status.innerText = msg;
+    }
+</script>
+
+</body>
+</html>
