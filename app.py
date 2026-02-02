@@ -60,8 +60,8 @@ TRANSLATIONS = {
         'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
-        'English': 'Touch here to select images (JPG, PNG, HEIC, BMP)'
+        'Korean': '아래를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
+        'English': 'Tap below to select an image (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
