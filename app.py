@@ -113,7 +113,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (Gothic A1 + 파란색 테마 완벽 적용)
+# [스타일] CSS (Gothic A1 + 파란색 테마 + KRDS 스타일)
 # ==========================================
 custom_style = """
 <style>
@@ -153,24 +153,29 @@ custom_style = """
         justify-content: center;
     }
     
-    /* 🟢 [수정] 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
-    .theowise-logo {
+    /* 🟢 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
+    .knouac-logo {
         font-family: 'Gothic A1', sans-serif !important;
         font-size: 28px;
-        font-weight: 900 !important; /* 가장 굵게 */
+        font-weight: 900 !important;
         color: #2c3e50;
         letter-spacing: -1px;
         text-decoration: none;
         text-transform: uppercase;
     }
 
-    /* ☰ 메뉴 버튼 */
+    /* 🟢 [수정] 언어 선택 버튼 (KRDS 스타일 - 텍스트형) */
     [data-testid="stPopover"] > button {
         border: none !important;
         background: transparent !important;
         color: #333 !important;
-        font-size: 24px !important;
+        font-size: 16px !important; /* 텍스트 크기 조정 */
+        font-weight: 700 !important; /* 굵게 */
         box-shadow: none !important;
+        padding: 0 10px !important;
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
     /* 메뉴 호버 시 블루 */
     [data-testid="stPopover"] > button:hover {
@@ -219,7 +224,7 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 🟢 [수정] 업로드 박스 디자인 (빨간색 완전 제거) */
+    /* 🟢 업로드 박스 디자인 */
     [data-testid="stFileUploader"] section {
         border: 3px dashed #ccc !important;
         background-color: #fafafa !important;
@@ -232,7 +237,7 @@ custom_style = """
         background-color: #f0f8ff !important;
     }
     
-    /* 🟢 [추가] 업로더 내부 버튼 ('Browse files') -> 파란색 강제 적용 */
+    /* 🔵 업로더 내부 버튼 ('Browse files') -> 파란색 강제 적용 */
     [data-testid="stFileUploader"] button {
         border-color: #007bff !important;
         color: #007bff !important;
@@ -248,7 +253,7 @@ custom_style = """
         color: white !important;
     }
 
-    /* 🟢 [추가] 파일 목록 삭제(X) 버튼 빨간색 제거 -> 회색/블루 */
+    /* 🟢 파일 목록 삭제(X) 버튼 빨간색 제거 -> 회색/블루 */
     [data-testid="stFileUploaderDeleteBtn"] button {
         color: #888 !important;
         background: transparent !important;
@@ -330,14 +335,15 @@ def process_image_in_memory(uploaded_file):
 # ==========================================
 # [UI] 상단 네비게이션 바
 # ==========================================
-c1, c2 = st.columns([8, 1])
+# [수정] 레이아웃 비율 조정 (8:2) -> 우측 텍스트 버튼 공간 확보
+c1, c2 = st.columns([8, 2])
 
 with c1:
-    # 폰트 변경 반영됨 (Impact -> Gothic A1)
-    st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
+    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
 
 with c2:
-    with st.popover("☰", use_container_width=False):
+    # 🟢 KRDS 10-01 Language Switcher 스타일 (Globe Icon + Text)
+    with st.popover("🌐 Language", use_container_width=False):
         st.markdown(
             f"<div style='font-family: Gothic A1; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
@@ -356,7 +362,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 Theowise")
+        st.caption("ver 1.0.1 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
