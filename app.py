@@ -29,11 +29,10 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # 1. 데이터 및 키 초기화
+    # [원복] 잘 동작하던 app(1).py의 로직 그대로 사용
+    # 별도의 st.rerun() 없이 키 값 변경만으로 업로더를 초기화합니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
-    # 2. [수정됨] 강제 리런 추가 (파일 업로더 잔상 제거를 위해 필수)
-    st.rerun()
 
 # ==========================================
 # [유틸] 자연 정렬 (Natural Sort) 함수
@@ -283,7 +282,8 @@ def process_image_in_memory(uploaded_file):
     img_l = img.crop((0, 0, c_x, h))
     img_r = img.crop((c_x, 0, w, h))
     
-    # 원본 파일명 기반 이름 생성
+    # [수정] OCR 제거 -> 원본 파일명 기반 이름 생성
+    # 파일명 오름차순 정렬을 위해 {파일명}_01_L, {파일명}_02_R 로 저장
     name_only = os.path.splitext(uploaded_file.name)[0]
     
     fname_l = f"{name_only}_01_L.jpg"
@@ -342,18 +342,12 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 파일 업로더 라벨 (HTML)
-st.markdown(
-    f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
-    unsafe_allow_html=True
-)
-
-# 실제 업로더 (고정 라벨, 동적 Key)
+# 파일 업로더
 uploaded_files = st.file_uploader(
-    "static_label", 
+    get_text('upload_label'),
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
-    key=f"uploader_{st.session_state.uploader_key}",
+    key=f"uploader_{st.session_state.uploader_key}", # [원복] 잘 동작하던 동적 Key 방식 사용
     label_visibility="collapsed" 
 )
 
@@ -376,8 +370,8 @@ if uploaded_files:
             
             st.write("") # 간격
             
-            # 2. [수정됨] PDF 선택 시에만 정렬 옵션 노출
-            sort_option = 'asc' # 기본값
+            # 2. [추가] 정렬 순서 (PDF 선택 시에만 표시)
+            sort_option = 'asc'
             if opt_pdf:
                 st.markdown(f"**{get_text('sort_label')}**")
                 sort_option = st.radio(
@@ -421,7 +415,7 @@ if uploaded_files:
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 정렬 로직 적용
+                            # 🟢 [추가] 정렬 로직 적용
                             is_reverse = (sort_option == 'desc')
                             processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
                             
