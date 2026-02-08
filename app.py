@@ -113,20 +113,21 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (강제 적용 버전)
+# [스타일] CSS (폰트 및 색상 수정)
 # ==========================================
 custom_style = """
 <style>
-    /* 폰트 임포트 */
+    /* 1. 폰트 임포트 (Gothic A1 + Nanum Myeongjo) */
     @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
-    /* 1. 기본 폰트 설정 */
+    /* 2. 기본 폰트 설정 (본문용) */
     html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p {
         font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #333;
     }
 
-    /* 2. 테마 색상 변수 강제 덮어쓰기 (가장 중요) */
+    /* 3. 테마 색상 강제 변수 설정 (하늘색 #38b6ff) */
     :root {
         --primary-color: #38b6ff !important;
         --st-color-primary: #38b6ff !important;
@@ -136,17 +137,21 @@ custom_style = """
     header[data-testid="stHeader"] { visibility: hidden; }
     .block-container { padding-top: 3rem !important; padding-bottom: 2rem !important; max-width: 700px; }
 
-    /* 로고 */
+    /* 🟢 [수정됨] 로고 스타일 (Nanum Myeongjo 적용) */
     .theowise-logo {
-        font-family: 'Gothic A1', sans-serif !important;
-        font-size: 28px;
-        font-weight: 900 !important;
-        color: #2c3e50;
-        letter-spacing: -1px;
-        text-decoration: none;
+        padding: 23px 0 0;
+        font-family: 'Nanum Myeongjo', serif !important;
+        font-weight: 800 !important;
+        font-size: 1.75em !important;
+        line-height: 32px !important;
+        letter-spacing: -0.2px !important;
+        color: #333 !important;
+        
+        display: flex;
+        justify-content: center; /* 중앙 정렬 유지 */
     }
 
-    /* 업로드 박스 */
+    /* 업로드 박스 디자인 */
     [data-testid="stFileUploader"] section {
         border: 3px dashed #ccc !important;
         background-color: #fafafa !important;
@@ -168,25 +173,29 @@ custom_style = """
         background-color: #e1f5fe !important;
     }
 
-    /* ★ 체크박스 색상 강제 변경 (aria-checked 사용) ★ */
-    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
+    /* 🟢 [수정됨] 체크박스 색상 (빨간색 제거 -> 하늘색 강제) */
+    /* 체크된 상태의 아이콘 컨테이너 타겟팅 */
+    [data-testid="stCheckbox"] label > div:first-child > div[role="checkbox"][aria-checked="true"] {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
     }
-    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] div {
-        background-color: #38b6ff !important; /* 내부 체크 표시 색상 보정 */
+    /* 체크박스 내부 아이콘 색상 */
+    [data-testid="stCheckbox"] label > div:first-child > div[role="checkbox"][aria-checked="true"] svg {
+        fill: white !important;
     }
-
-    /* ★ 라디오 버튼 색상 강제 변경 (aria-checked 사용) ★ */
-    div[data-testid="stRadio"] div[role="radio"][aria-checked="true"] {
+    
+    /* 🟢 [수정됨] 라디오 버튼 색상 (빨간색 제거 -> 하늘색 강제) */
+    /* 선택된 라디오 버튼의 외부 원 타겟팅 */
+    [data-testid="stRadio"] label[data-checked="true"] > div:first-child {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
     }
-    div[data-testid="stRadio"] div[role="radio"][tabindex="0"] {
-        color: #38b6ff !important; /* 포커스 시 색상 */
+    /* 선택된 라디오 버튼 텍스트 색상 */
+    [data-testid="stRadio"] label[data-checked="true"] p {
+        color: #38b6ff !important;
     }
 
-    /* ★ 변환 버튼 (Primary) ★ */
+    /* 🟢 변환 버튼 (Primary) -> Sky Blue */
     div.stButton > button[kind="primary"] {
         background-color: #38b6ff !important;
         border: 1px solid #38b6ff !important;
@@ -194,25 +203,46 @@ custom_style = """
         width: 100%;
         padding: 0.7rem;
         font-size: 16px;
-        font-weight: 800 !important; /* 글자 더 굵게 */
+        font-weight: 800 !important;
         border-radius: 8px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.2); /* 텍스트 그림자 강화 */
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     div.stButton > button[kind="primary"]:hover { 
         background-color: #0288d1 !important;
         border-color: #0288d1 !important;
         color: white !important;
     }
+    div.stButton > button[kind="primary"]:focus {
+        box-shadow: none !important;
+        outline: none !important;
+    }
     
-    /* 기타 스타일 */
+    /* 파일 목록 삭제 버튼 */
     [data-testid="stFileUploaderDeleteBtn"] button { color: #888 !important; border: none !important; }
     [data-testid="stFileUploaderDeleteBtn"] button:hover { color: #333 !important; background: #eee !important; }
     [data-testid="stFileUploaderDeleteBtn"] svg { fill: #888 !important; }
     [data-testid="stFileUploaderDeleteBtn"]:hover svg { fill: #333 !important; }
 
-    .main-title { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 0.5rem; color: #111; margin-top: 20px; }
-    .sub-description { text-align: center; color: #666; font-size: 15px; margin-bottom: 30px; line-height: 1.6; }
+    /* 메인 타이틀 */
+    .main-title {
+        font-size: 26px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #111;
+        margin-top: 20px;
+    }
     
+    /* 설명 텍스트 */
+    .sub-description {
+        text-align: center;
+        color: #666;
+        font-size: 15px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    /* 다운로드 버튼 (Green 유지) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none;
