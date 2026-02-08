@@ -55,8 +55,8 @@ TRANSLATIONS = {
         'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
-        'English': 'Touch here to select images (JPG, PNG, HEIC, BMP)'
+        'Korean': '아래를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
+        'English': 'Touch below to select images (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
@@ -75,8 +75,8 @@ TRANSLATIONS = {
         'English': 'Descending (9→1)'
     },
     'split_btn': {
-        'Korean': '⌖ 변환 시작하기',
-        'English': '⌖ Start splitting'
+        'Korean': '䷖ 변환 시작하기',
+        'English': '䷖ Start splitting'
     },
     'warning_msg': {
         'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
