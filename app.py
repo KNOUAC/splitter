@@ -29,9 +29,7 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # [수정 완료] st.rerun() 삭제
     # on_click 콜백이 끝나면 Streamlit이 '자동으로' 화면을 갱신합니다.
-    # uploader_key가 변경되었으므로, 자동 갱신 때 파일 업로더가 초기화됩니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
 
@@ -42,9 +40,6 @@ def atoi(text):
     return int(text) if text.isdigit() else text
 
 def natural_keys(text):
-    '''
-    alist.sort(key=natural_keys) -> 1, 2, 10, 11, ... 순서로 정렬됨
-    '''
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # ==========================================
@@ -118,13 +113,16 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS
+# [스타일] CSS (Gothic A1 적용)
 # ==========================================
 custom_style = """
 <style>
-    /* 폰트 적용 */
+    /* 폰트 임포트 (Gothic A1) */
+    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700&display=swap');
+
+    /* 전체 폰트 적용 */
     html, body, [class*="css"] {
-        font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #333;
     }
 
@@ -156,7 +154,7 @@ custom_style = """
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 🟢 로고 스타일 (Impact 폰트 - 음영 제거) */
+    /* 🟢 로고 스타일 (Impact - 브랜드 유지를 위해 유지) */
     .knouac-logo {
         font-family: 'Impact', sans-serif !important;
         font-size: 32px;
@@ -185,15 +183,15 @@ custom_style = """
         background: transparent !important;
     }
 
-    /* 🟢 설정 메뉴 내부 (라디오 버튼 등) 폰트 변경: Trebuchet MS */
+    /* 🟢 설정 메뉴 내부 폰트 변경: Gothic A1으로 통일 */
     [data-testid="stRadio"], 
     [data-testid="stRadio"] label, 
     [data-testid="stRadio"] div, 
     [data-testid="stRadio"] p {
-        font-family: 'Trebuchet MS', sans-serif !important;
+        font-family: 'Gothic A1', sans-serif !important;
     }
 
-    /* 🔵 라디오 버튼 선택 색상 (Red -> Blue) 강력 적용 */
+    /* 🔵 라디오 버튼 선택 색상 (Red -> Blue) */
     div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
@@ -202,7 +200,7 @@ custom_style = """
         color: #007bff !important;
     }
 
-    /* 🔵 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강력 적용 */
+    /* 🔵 체크박스 선택 색상 (Red -> Blue) */
     div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
@@ -236,10 +234,10 @@ custom_style = """
         text-align: center;
     }
     
-    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
+    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 */
     [data-testid="stFileUploader"] section:hover {
-        border-color: #007bff !important; /* 파란색 */
-        background-color: #f0f8ff !important; /* 아주 연한 파랑 배경 */
+        border-color: #007bff !important;
+        background-color: #f0f8ff !important;
     }
 
     /* 버튼 스타일 */
@@ -268,7 +266,7 @@ custom_style = """
 st.markdown(custom_style, unsafe_allow_html=True)
 
 # ==========================================
-# [로직] 이미지 처리 함수 (파일명 기반 처리)
+# [로직] 이미지 처리 함수
 # ==========================================
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
@@ -283,7 +281,6 @@ def process_image_in_memory(uploaded_file):
     img_l = img.crop((0, 0, c_x, h))
     img_r = img.crop((c_x, 0, w, h))
     
-    # 원본 파일명 기반 이름 생성
     name_only = os.path.splitext(uploaded_file.name)[0]
     
     fname_l = f"{name_only}_01_L.jpg"
@@ -298,7 +295,7 @@ def process_image_in_memory(uploaded_file):
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
-# [UI] 상단 네비게이션 바 (Sticky Header)
+# [UI] 상단 네비게이션 바
 # ==========================================
 c1, c2 = st.columns([8, 1])
 
@@ -306,10 +303,10 @@ with c1:
     st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
 
 with c2:
-    # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
+        # 폰트 통일 (Gothic A1)
         st.markdown(
-            f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
+            f"<div style='font-family: Gothic A1; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
@@ -334,7 +331,6 @@ st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 # [UI] 메인 콘텐츠
 # ==========================================
 
-# 타이틀 & 설명
 st.markdown(f'<div class="main-title">{get_text("page_title")}</div>', unsafe_allow_html=True)
 st.markdown(f"""
 <div class="sub-description">
@@ -342,13 +338,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 파일 업로더 라벨 (HTML)
 st.markdown(
     f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
     unsafe_allow_html=True
 )
 
-# 실제 업로더 (고정 라벨, 동적 Key)
 uploaded_files = st.file_uploader(
     "static_label", 
     accept_multiple_files=True, 
@@ -357,16 +351,13 @@ uploaded_files = st.file_uploader(
     label_visibility="collapsed" 
 )
 
-# 기능 컨트롤 영역
 if uploaded_files:
     st.write("") 
     
     with st.container(border=True):
         col_opt, col_act = st.columns([1, 1.2], gap="large")
         
-        # [옵션]
         with col_opt:
-            # 1. 저장 형식
             st.markdown(f"**{get_text('format_label')}**")
             c_fmt1, c_fmt2 = st.columns(2)
             with c_fmt1:
@@ -374,9 +365,8 @@ if uploaded_files:
             with c_fmt2:
                 opt_zip = st.checkbox("ZIP", value=False)
             
-            st.write("") # 간격
+            st.write("")
             
-            # 2. [추가] 정렬 순서 (PDF 선택 시에만 표시)
             sort_option = 'asc'
             if opt_pdf:
                 st.markdown(f"**{get_text('sort_label')}**")
@@ -387,11 +377,9 @@ if uploaded_files:
                     label_visibility="collapsed"
                 )
 
-        # [액션]
         with col_act:
             st.write("") 
             
-            # (A) 변환 시작
             if st.session_state.processed_data is None:
                 btn_text_base = get_text('split_btn')
                 count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
@@ -414,14 +402,12 @@ if uploaded_files:
                                 
                                 for fname, zip_buf, pdf_img in results:
                                     base, ext = os.path.splitext(fname)
-                                    # 중복 방지
                                     if any(x[0] == fname for x in processed_list):
                                         fname = f"{base}_{i}{ext}"
                                     processed_list.append((fname, zip_buf, pdf_img))
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 정렬 로직 적용
                             is_reverse = (sort_option == 'desc')
                             processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
                             
@@ -433,7 +419,6 @@ if uploaded_files:
                         except Exception as e:
                             st.error(f"Error: {e}")
 
-            # (B) 다운로드
             else:
                 data_list = st.session_state.processed_data
                 
@@ -441,7 +426,6 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [해상도 유지] 200.0 DPI
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
@@ -465,10 +449,7 @@ if uploaded_files:
                         use_container_width=True
                     )
     
-    # 초기화 버튼
     if st.session_state.processed_data is not None:
         st.write("")
-        # on_click에서 reset_app을 호출하여 state를 초기화하고, 
-        # Streamlit이 자동으로 재실행되며 키값이 바뀐 업로더를 렌더링함
         if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
             pass
