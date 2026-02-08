@@ -12,7 +12,7 @@ from pillow_heif import register_heif_opener
 register_heif_opener()
 
 st.set_page_config(
-    page_title="KNOUAC Book Splitter", 
+    page_title="Theowise Book Splitter", 
     page_icon="📚",
     layout="centered", 
     initial_sidebar_state="collapsed"
@@ -67,12 +67,12 @@ TRANSLATIONS = {
         'English': 'Sort Order (Filename)'
     },
     'sort_asc': { 
-        'Korean': '오름차순 (1→9)',
-        'English': 'Ascending (1→9)'
+        'Korean': '오름차순 (a→z)',
+        'English': 'Ascending (a→z)'
     },
     'sort_desc': { 
-        'Korean': '내림차순 (9→1)',
-        'English': 'Descending (9→1)'
+        'Korean': '내림차순 (z→a)',
+        'English': 'Descending (z→a)'
     },
     'split_btn': {
         'Korean': '⌖ 변환 시작하기',
@@ -155,7 +155,7 @@ custom_style = """
     }
     
     /* 🟢 로고 스타일 (Impact - 브랜드 유지를 위해 유지) */
-    .knouac-logo {
+    .Theowise-logo {
         font-family: 'Impact', sans-serif !important;
         font-size: 32px;
         font-weight: 400;
@@ -300,7 +300,7 @@ def process_image_in_memory(uploaded_file):
 c1, c2 = st.columns([8, 1])
 
 with c1:
-    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
+    st.markdown('<div class="Theowise-logo">THEOWISE</div>', unsafe_allow_html=True)
 
 with c2:
     with st.popover("☰", use_container_width=False):
