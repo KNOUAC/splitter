@@ -335,35 +335,8 @@ def process_image_in_memory(uploaded_file):
 # ==========================================
 # [UI] 상단 네비게이션 바
 # ==========================================
-# [수정] 레이아웃 비율 조정 (8:2) -> 우측 텍스트 버튼 공간 확보
-c1, c2 = st.columns([8, 2])
-
-with c1:
-    st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
-
-with c2:
-    # 🟢 KRDS 10-01 Language Switcher 스타일 (Globe Icon + Text)
-    with st.popover("🌐 Language", use_container_width=False):
-        st.markdown(
-            f"<div style='font-family: Gothic A1; font-weight: bold;'>{get_text('menu_settings')}</div>", 
-            unsafe_allow_html=True
-        )
-        
-        new_lang = st.radio(
-            "Language", 
-            ["Korean", "English"],
-            index=0 if st.session_state.language == 'Korean' else 1,
-            key='lang_radio',
-            label_visibility="collapsed"
-        )
-        
-        if new_lang != st.session_state.language:
-            st.session_state.language = new_lang
-            st.rerun()
-
-        st.divider()
-        st.caption("ver 1.0.1 THEOHYEON")
-
+# [수정] 언어 선택 메뉴 삭제 -> Theowise 로고만 중앙 상단에 표시
+st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 # ==========================================
