@@ -113,32 +113,30 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS
+# [스타일] CSS (강제 적용 버전)
 # ==========================================
 custom_style = """
 <style>
-    /* 폰트 임포트 (Gothic A1) */
+    /* 폰트 임포트 */
     @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700;800;900&display=swap');
 
-    /* 1. 전체 폰트 강제 적용 */
+    /* 1. 기본 폰트 설정 */
     html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p {
         font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #333;
     }
 
-    /* Streamlit 기본 헤더 숨기기 */
-    header[data-testid="stHeader"] {
-        visibility: hidden;
-    }
-    
-    /* 상단 여백 조정 */
-    .block-container {
-        padding-top: 3rem !important;
-        padding-bottom: 2rem !important;
-        max-width: 700px;
+    /* 2. 테마 색상 변수 강제 덮어쓰기 (가장 중요) */
+    :root {
+        --primary-color: #38b6ff !important;
+        --st-color-primary: #38b6ff !important;
     }
 
-    /* 🟢 로고 스타일 */
+    /* Streamlit 헤더 숨김 */
+    header[data-testid="stHeader"] { visibility: hidden; }
+    .block-container { padding-top: 3rem !important; padding-bottom: 2rem !important; max-width: 700px; }
+
+    /* 로고 */
     .theowise-logo {
         font-family: 'Gothic A1', sans-serif !important;
         font-size: 28px;
@@ -148,20 +146,17 @@ custom_style = """
         text-decoration: none;
     }
 
-    /* 🟢 업로드 박스 디자인 (하늘색 테두리 호버) */
+    /* 업로드 박스 */
     [data-testid="stFileUploader"] section {
         border: 3px dashed #ccc !important;
         background-color: #fafafa !important;
         border-radius: 10px !important;
         padding: 40px 20px !important;
     }
-    /* 업로드 박스 호버 (Sky Blue) */
     [data-testid="stFileUploader"] section:hover {
         border-color: #38b6ff !important;
         background-color: #e1f5fe !important;
     }
-    
-    /* 🔵 업로더 내부 버튼 ('Browse files') -> 하늘색 */
     [data-testid="stFileUploader"] button {
         border-color: #38b6ff !important;
         color: #38b6ff !important;
@@ -172,81 +167,52 @@ custom_style = """
         color: #0288d1 !important;
         background-color: #e1f5fe !important;
     }
-    
-    /* 🟢 [수정됨] 라디오 버튼 선택 색상 (Sky Blue) */
-    div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
+
+    /* ★ 체크박스 색상 강제 변경 (aria-checked 사용) ★ */
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
     }
-    /* 라디오 버튼 텍스트 색상 (선택 시) */
-    div[data-testid="stRadio"] label[data-checked="true"] p {
-        color: #38b6ff !important;
+    div[data-testid="stCheckbox"] div[role="checkbox"][aria-checked="true"] div {
+        background-color: #38b6ff !important; /* 내부 체크 표시 색상 보정 */
     }
 
-    /* 🟢 [수정됨] 체크박스 선택 색상 (Sky Blue) */
-    div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
+    /* ★ 라디오 버튼 색상 강제 변경 (aria-checked 사용) ★ */
+    div[data-testid="stRadio"] div[role="radio"][aria-checked="true"] {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
     }
+    div[data-testid="stRadio"] div[role="radio"][tabindex="0"] {
+        color: #38b6ff !important; /* 포커스 시 색상 */
+    }
 
-    /* 🟢 [수정됨] 변환 버튼 (Primary) -> Sky Blue */
+    /* ★ 변환 버튼 (Primary) ★ */
     div.stButton > button[kind="primary"] {
-        background-color: #38b6ff !important; /* 하늘색 */
-        border: none;
-        color: white !important; /* 글자색 흰색 고정 */
+        background-color: #38b6ff !important;
+        border: 1px solid #38b6ff !important;
+        color: white !important;
         width: 100%;
         padding: 0.7rem;
         font-size: 16px;
-        font-weight: 700; /* 글자 굵게 */
+        font-weight: 800 !important; /* 글자 더 굵게 */
         border-radius: 8px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1); /* 가독성 향상 그림자 */
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2); /* 텍스트 그림자 강화 */
     }
     div.stButton > button[kind="primary"]:hover { 
-        background-color: #0288d1 !important; /* 호버 시 진한 하늘색 */
-        box-shadow: 0 4px 8px rgba(56, 182, 255, 0.3);
-    }
-    div.stButton > button[kind="primary"]:focus { 
-        box-shadow: none !important; 
-        outline: none !important;
-    }
-
-    /* 🟢 파일 목록 삭제(X) 버튼 */
-    [data-testid="stFileUploaderDeleteBtn"] button {
-        color: #888 !important;
-        background: transparent !important;
-        border: none !important;
-    }
-    [data-testid="stFileUploaderDeleteBtn"] button:hover {
-        color: #333 !important;
-        background: #eee !important;
-    }
-    [data-testid="stFileUploaderDeleteBtn"] svg {
-        fill: #888 !important;
-    }
-    [data-testid="stFileUploaderDeleteBtn"]:hover svg {
-        fill: #333 !important;
-    }
-
-    /* 메인 타이틀 */
-    .main-title {
-        font-size: 26px;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        color: #111;
-        margin-top: 20px;
+        background-color: #0288d1 !important;
+        border-color: #0288d1 !important;
+        color: white !important;
     }
     
-    /* 설명 텍스트 */
-    .sub-description {
-        text-align: center;
-        color: #666;
-        font-size: 15px;
-        margin-bottom: 30px;
-        line-height: 1.6;
-    }
+    /* 기타 스타일 */
+    [data-testid="stFileUploaderDeleteBtn"] button { color: #888 !important; border: none !important; }
+    [data-testid="stFileUploaderDeleteBtn"] button:hover { color: #333 !important; background: #eee !important; }
+    [data-testid="stFileUploaderDeleteBtn"] svg { fill: #888 !important; }
+    [data-testid="stFileUploaderDeleteBtn"]:hover svg { fill: #333 !important; }
 
-    /* 다운로드 버튼 (Green 유지) */
+    .main-title { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 0.5rem; color: #111; margin-top: 20px; }
+    .sub-description { text-align: center; color: #666; font-size: 15px; margin-bottom: 30px; line-height: 1.6; }
+    
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none;
@@ -322,7 +288,6 @@ if uploaded_files:
     st.write("") 
     
     with st.container(border=True):
-        # [수정됨] 이전에 에러가 났던 부분: gap="large" 뒤에 괄호 닫음
         col_opt, col_act = st.columns([1, 1.2], gap="large")
         
         with col_opt:
