@@ -146,9 +146,7 @@ custom_style = """
         line-height: 32px !important;
         letter-spacing: -0.2px !important;
         color: #333 !important;
-        
-        display: flex;
-        justify-content: center; /* 중앙 정렬 유지 */
+        text-decoration: none;
     }
 
     /* 업로드 박스 디자인 */
