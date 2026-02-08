@@ -29,8 +29,9 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # [원복] 잘 동작하던 app(1).py의 로직 그대로 사용
-    # 별도의 st.rerun() 없이 키 값 변경만으로 업로더를 초기화합니다.
+    # [수정 완료] st.rerun() 삭제
+    # on_click 콜백이 끝나면 Streamlit이 '자동으로' 화면을 갱신합니다.
+    # uploader_key가 변경되었으므로, 자동 갱신 때 파일 업로더가 초기화됩니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
 
@@ -282,8 +283,7 @@ def process_image_in_memory(uploaded_file):
     img_l = img.crop((0, 0, c_x, h))
     img_r = img.crop((c_x, 0, w, h))
     
-    # [수정] OCR 제거 -> 원본 파일명 기반 이름 생성
-    # 파일명 오름차순 정렬을 위해 {파일명}_01_L, {파일명}_02_R 로 저장
+    # 원본 파일명 기반 이름 생성
     name_only = os.path.splitext(uploaded_file.name)[0]
     
     fname_l = f"{name_only}_01_L.jpg"
@@ -342,12 +342,18 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 파일 업로더
+# 파일 업로더 라벨 (HTML)
+st.markdown(
+    f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
+    unsafe_allow_html=True
+)
+
+# 실제 업로더 (고정 라벨, 동적 Key)
 uploaded_files = st.file_uploader(
-    get_text('upload_label'),
+    "static_label", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
-    key=f"uploader_{st.session_state.uploader_key}", # [원복] 잘 동작하던 동적 Key 방식 사용
+    key=f"uploader_{st.session_state.uploader_key}",
     label_visibility="collapsed" 
 )
 
@@ -415,7 +421,7 @@ if uploaded_files:
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 [추가] 정렬 로직 적용
+                            # 🟢 정렬 로직 적용
                             is_reverse = (sort_option == 'desc')
                             processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
                             
@@ -462,5 +468,7 @@ if uploaded_files:
     # 초기화 버튼
     if st.session_state.processed_data is not None:
         st.write("")
+        # on_click에서 reset_app을 호출하여 state를 초기화하고, 
+        # Streamlit이 자동으로 재실행되며 키값이 바뀐 업로더를 렌더링함
         if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
             pass
