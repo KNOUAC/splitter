@@ -322,4 +322,102 @@ if uploaded_files:
     st.write("") 
     
     with st.container(border=True):
-        col_opt, col_act = st.columns([1, 1.2], gap="large
+        col_opt, col_act = st.columns([1, 1.2], gap="large")
+        
+        with col_opt:
+            st.markdown(f"**{get_text('format_label')}**")
+            c_fmt1, c_fmt2 = st.columns(2)
+            with c_fmt1:
+                opt_pdf = st.checkbox("PDF", value=True)
+            with c_fmt2:
+                opt_zip = st.checkbox("ZIP", value=False)
+            
+            st.write("")
+            
+            sort_option = 'asc'
+            if opt_pdf:
+                st.markdown(f"**{get_text('sort_label')}**")
+                sort_option = st.radio(
+                    "Sort",
+                    ["asc", "desc"],
+                    format_func=lambda x: get_text('sort_asc') if x == 'asc' else get_text('sort_desc'),
+                    label_visibility="collapsed"
+                )
+
+        with col_act:
+            st.write("") 
+            
+            if st.session_state.processed_data is None:
+                btn_text_base = get_text('split_btn')
+                count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
+                
+                if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
+                    if not opt_pdf and not opt_zip:
+                        st.warning(get_text('warning_msg'))
+                    else:
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        processed_list = []
+                        
+                        try:
+                            total = len(uploaded_files)
+                            process_msg = get_text('processing_msg')
+                            
+                            for i, file in enumerate(uploaded_files):
+                                status_text.text(f"{process_msg} {i+1} / {total}")
+                                results = process_image_in_memory(file)
+                                
+                                for fname, zip_buf, pdf_img in results:
+                                    base, ext = os.path.splitext(fname)
+                                    if any(x[0] == fname for x in processed_list):
+                                        fname = f"{base}_{i}{ext}"
+                                    processed_list.append((fname, zip_buf, pdf_img))
+                                
+                                progress_bar.progress((i + 1) / total)
+                            
+                            is_reverse = (sort_option == 'desc')
+                            processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
+                            
+                            st.session_state.processed_data = processed_list
+                            status_text.empty()
+                            progress_bar.empty()
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+
+            else:
+                data_list = st.session_state.processed_data
+                
+                if opt_pdf:
+                    pdf_buffer = io.BytesIO()
+                    pil_imgs = [item[2] for item in data_list]
+                    if pil_imgs:
+                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화)
+                        pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
+                        st.download_button(
+                            label=get_text('download_pdf'),
+                            data=pdf_buffer.getvalue(),
+                            file_name="split_book.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+
+                if opt_zip:
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zf:
+                        for fname, z_buf, _ in data_list:
+                            zf.writestr(fname, z_buf.getvalue())
+                    
+                    st.download_button(
+                        label=get_text('download_zip'),
+                        data=zip_buffer.getvalue(),
+                        file_name="split_images.zip",
+                        mime="application/zip",
+                        use_container_width=True
+                    )
+    
+    if st.session_state.processed_data is not None:
+        st.write("")
+        if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
+            pass
