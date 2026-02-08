@@ -67,12 +67,12 @@ TRANSLATIONS = {
         'English': 'Sort Order (Filename)'
     },
     'sort_asc': { 
-        'Korean': '오름차순 (a→z)',
-        'English': 'Ascending (a→z)'
+        'Korean': '오름차순 (1→9)',
+        'English': 'Ascending (1→9)'
     },
     'sort_desc': { 
-        'Korean': '내림차순 (z→a)',
-        'English': 'Descending (z→a)'
+        'Korean': '내림차순 (9→1)',
+        'English': 'Descending (9→1)'
     },
     'split_btn': {
         'Korean': '⌖ 변환 시작하기',
@@ -113,7 +113,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (Gothic A1 적용)
+# [스타일] CSS (Gothic A1 적용 + 파란색 테마)
 # ==========================================
 custom_style = """
 <style>
@@ -155,7 +155,7 @@ custom_style = """
     }
     
     /* 🟢 로고 스타일 (Impact - 브랜드 유지를 위해 유지) */
-    .Theowise-logo {
+    .knouac-logo {
         font-family: 'Impact', sans-serif !important;
         font-size: 32px;
         font-weight: 400;
@@ -178,8 +178,9 @@ custom_style = """
         margin-top: -5px;
         box-shadow: none !important;
     }
+    /* 🔵 메뉴 버튼 호버 색상 변경 (Red -> Blue) */
     [data-testid="stPopover"] > button:hover {
-        color: #d9534f !important;
+        color: #007bff !important;
         background: transparent !important;
     }
 
@@ -234,15 +235,15 @@ custom_style = """
         text-align: center;
     }
     
-    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 */
+    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
     [data-testid="stFileUploader"] section:hover {
         border-color: #007bff !important;
         background-color: #f0f8ff !important;
     }
 
-    /* 버튼 스타일 */
+    /* 🔵 [변경] 변환 버튼 스타일 (Red -> Blue) */
     div.stButton > button[kind="primary"] {
-        background-color: #d9534f !important;
+        background-color: #007bff !important; /* 파란색 */
         border: none;
         color: white;
         width: 100%;
@@ -251,8 +252,10 @@ custom_style = """
         font-weight: 600;
         border-radius: 8px;
     }
-    div.stButton > button[kind="primary"]:hover { background-color: #c9302c !important; }
+    /* 버튼 호버 시 더 진한 파란색 */
+    div.stButton > button[kind="primary"]:hover { background-color: #0056b3 !important; }
     
+    /* 다운로드 버튼 (초록색 유지) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none;
@@ -300,7 +303,7 @@ def process_image_in_memory(uploaded_file):
 c1, c2 = st.columns([8, 1])
 
 with c1:
-    st.markdown('<div class="Theowise-logo">THEOWISE</div>', unsafe_allow_html=True)
+    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
 
 with c2:
     with st.popover("☰", use_container_width=False):
@@ -323,7 +326,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 THEOHYEON")
+        st.caption("ver 1.0.1 theowise")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
@@ -426,6 +429,7 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
+                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화)
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
