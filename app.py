@@ -29,11 +29,11 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # 키를 변경하여 파일 업로더를 강제로 초기화
+    # [수정됨] st.rerun() 제거
+    # on_click 콜백이 끝난 후 Streamlit이 자동으로 스크립트를 재실행하며
+    # 변경된 uploader_key가 적용된 새로운(빈) 업로더를 그립니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
-    # [수정] 즉시 재실행하여 화면에 남은 파일을 확실하게 제거
-    st.rerun()
 
 # ==========================================
 # [유틸] 자연 정렬 (Natural Sort) 함수
@@ -67,15 +67,15 @@ TRANSLATIONS = {
         'Korean': '저장 형식',
         'English': 'Save Format'
     },
-    'sort_label': { # [추가] 정렬 라벨
-        'Korean': '정렬 순서',
-        'English': 'Sort Order'
+    'sort_label': { 
+        'Korean': '정렬 순서 (파일명 기준)',
+        'English': 'Sort Order (Filename)'
     },
-    'sort_asc': { # [추가] 오름차순
+    'sort_asc': { 
         'Korean': '오름차순 (1→9)',
         'English': 'Ascending (1→9)'
     },
-    'sort_desc': { # [추가] 내림차순
+    'sort_desc': { 
         'Korean': '내림차순 (9→1)',
         'English': 'Descending (9→1)'
     },
