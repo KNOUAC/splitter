@@ -173,7 +173,7 @@ custom_style = """
         background-color: #e1f5fe !important;
     }
     
-    /* 🟢 라디오 버튼 선택 색상 (Sky Blue) */
+    /* 🟢 [수정됨] 라디오 버튼 선택 색상 (Sky Blue) */
     div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
@@ -183,13 +183,13 @@ custom_style = """
         color: #38b6ff !important;
     }
 
-    /* 🟢 체크박스 선택 색상 (Sky Blue) */
+    /* 🟢 [수정됨] 체크박스 선택 색상 (Sky Blue) */
     div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
         background-color: #38b6ff !important;
         border-color: #38b6ff !important;
     }
 
-    /* 🟢 변환 버튼 (Primary) -> Sky Blue */
+    /* 🟢 [수정됨] 변환 버튼 (Primary) -> Sky Blue */
     div.stButton > button[kind="primary"] {
         background-color: #38b6ff !important; /* 하늘색 */
         border: none;
@@ -322,6 +322,7 @@ if uploaded_files:
     st.write("") 
     
     with st.container(border=True):
+        # [수정됨] 이전에 에러가 났던 부분: gap="large" 뒤에 괄호 닫음
         col_opt, col_act = st.columns([1, 1.2], gap="large")
         
         with col_opt:
