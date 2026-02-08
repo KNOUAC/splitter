@@ -154,7 +154,7 @@ custom_style = """
     }
     
     /* 🟢 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
-    .knouac-logo {
+    .theowise-logo {
         font-family: 'Gothic A1', sans-serif !important;
         font-size: 28px;
         font-weight: 900 !important;
@@ -339,7 +339,7 @@ def process_image_in_memory(uploaded_file):
 c1, c2 = st.columns([8, 2])
 
 with c1:
-    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
+    st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
 
 with c2:
     # 🟢 KRDS 10-01 Language Switcher 스타일 (Globe Icon + Text)
