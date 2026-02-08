@@ -154,7 +154,7 @@ custom_style = """
     }
     
     /* 🟢 [수정] 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
-    .knouac-logo {
+    .theowise-logo {
         font-family: 'Gothic A1', sans-serif !important;
         font-size: 28px;
         font-weight: 900 !important; /* 가장 굵게 */
@@ -334,7 +334,7 @@ c1, c2 = st.columns([8, 1])
 
 with c1:
     # 폰트 변경 반영됨 (Impact -> Gothic A1)
-    st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
+    st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
 
 with c2:
     with st.popover("☰", use_container_width=False):
@@ -356,7 +356,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 THEOHYEON")
+        st.caption("ver 1.0.1 theowise")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
