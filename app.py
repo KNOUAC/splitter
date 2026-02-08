@@ -356,7 +356,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 theowise")
+        st.caption("ver 1.0.1 Theowise")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
