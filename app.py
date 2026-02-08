@@ -29,9 +29,11 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # on_click 콜백에서는 st.rerun()을 호출하지 않아도 자동으로 갱신됩니다.
+    # 키를 변경하여 파일 업로더를 강제로 초기화
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
+    # [수정] 즉시 재실행하여 화면에 남은 파일을 확실하게 제거
+    st.rerun()
 
 # ==========================================
 # [유틸] 자연 정렬 (Natural Sort) 함수
@@ -64,6 +66,18 @@ TRANSLATIONS = {
     'format_label': {
         'Korean': '저장 형식',
         'English': 'Save Format'
+    },
+    'sort_label': { # [추가] 정렬 라벨
+        'Korean': '정렬 순서',
+        'English': 'Sort Order'
+    },
+    'sort_asc': { # [추가] 오름차순
+        'Korean': '오름차순 (1→9)',
+        'English': 'Ascending (1→9)'
+    },
+    'sort_desc': { # [추가] 내림차순
+        'Korean': '내림차순 (9→1)',
+        'English': 'Descending (9→1)'
     },
     'split_btn': {
         'Korean': '⌖ 변환 시작하기',
@@ -108,7 +122,7 @@ def get_text(key):
 # ==========================================
 custom_style = """
 <style>
-    /* 폰트 적용 (본문은 Suit/시스템 폰트) */
+    /* 폰트 적용 */
     html, body, [class*="css"] {
         font-family: 'Suit', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #333;
@@ -254,7 +268,7 @@ custom_style = """
 st.markdown(custom_style, unsafe_allow_html=True)
 
 # ==========================================
-# [로직] 이미지 처리 함수 (OCR 제거 및 파일명 기반 처리)
+# [로직] 이미지 처리 함수 (파일명 기반 처리)
 # ==========================================
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
@@ -269,9 +283,7 @@ def process_image_in_memory(uploaded_file):
     img_l = img.crop((0, 0, c_x, h))
     img_r = img.crop((c_x, 0, w, h))
     
-    # 🟢 [변경] OCR 로직 제거 -> 원본 파일명 기반 이름 생성
-    # 예: MyBook.jpg -> MyBook_01_L.jpg, MyBook_02_R.jpg
-    # 이렇게 하면 파일명 정렬 시 순서가 보장됩니다.
+    # 원본 파일명 기반 이름 생성
     name_only = os.path.splitext(uploaded_file.name)[0]
     
     fname_l = f"{name_only}_01_L.jpg"
@@ -296,13 +308,11 @@ with c1:
 with c2:
     # ☰ 메뉴 팝오버
     with st.popover("☰", use_container_width=False):
-        # 🟢 타이틀: 항상 "언어 (Language)"로 고정
         st.markdown(
             f"<div style='font-family: Trebuchet MS; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
         )
         
-        # 🟢 라벨 숨김 & 옵션 텍스트 유지
         new_lang = st.radio(
             "Language", 
             ["Korean", "English"],
@@ -316,7 +326,6 @@ with c2:
             st.rerun()
 
         st.divider()
-        # 🟢 버전 정보
         st.caption("ver 1.0.1 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
@@ -333,13 +342,13 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 🔵 파일 업로더 라벨 분리 (상태 유지를 위해)
+# 파일 업로더 라벨 (HTML)
 st.markdown(
     f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
     unsafe_allow_html=True
 )
 
-# 실제 업로더는 고정된 label 사용
+# 실제 업로더 (고정 라벨, 동적 Key)
 uploaded_files = st.file_uploader(
     "static_label", 
     accept_multiple_files=True, 
@@ -357,13 +366,25 @@ if uploaded_files:
         
         # [옵션]
         with col_opt:
+            # 1. 저장 형식
             st.markdown(f"**{get_text('format_label')}**")
-            c1, c2 = st.columns(2)
-            with c1:
+            c_fmt1, c_fmt2 = st.columns(2)
+            with c_fmt1:
                 opt_pdf = st.checkbox("PDF", value=True)
-            with c2:
+            with c_fmt2:
                 opt_zip = st.checkbox("ZIP", value=False)
-        
+            
+            st.write("") # 간격
+            
+            # 2. [추가] 정렬 순서 (오름차순/내림차순)
+            st.markdown(f"**{get_text('sort_label')}**")
+            sort_option = st.radio(
+                "Sort",
+                ["asc", "desc"],
+                format_func=lambda x: get_text('sort_asc') if x == 'asc' else get_text('sort_desc'),
+                label_visibility="collapsed"
+            )
+
         # [액션]
         with col_act:
             st.write("") 
@@ -391,16 +412,16 @@ if uploaded_files:
                                 
                                 for fname, zip_buf, pdf_img in results:
                                     base, ext = os.path.splitext(fname)
-                                    # 중복 방지 (같은 파일명 존재 시)
+                                    # 중복 방지
                                     if any(x[0] == fname for x in processed_list):
                                         fname = f"{base}_{i}{ext}"
                                     processed_list.append((fname, zip_buf, pdf_img))
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 파일명 오름차순 정렬 (자연 정렬)
-                            # Filename_01_L -> Filename_02_R 순서로 정렬됨
-                            processed_list.sort(key=lambda x: natural_keys(x[0]))
+                            # 🟢 정렬 로직 적용 (선택된 옵션에 따라)
+                            is_reverse = (sort_option == 'desc')
+                            processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
                             
                             st.session_state.processed_data = processed_list
                             status_text.empty()
@@ -418,7 +439,7 @@ if uploaded_files:
                     pdf_buffer = io.BytesIO()
                     pil_imgs = [item[2] for item in data_list]
                     if pil_imgs:
-                        # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화)
+                        # [해상도 유지] 200.0 DPI
                         pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                         st.download_button(
                             label=get_text('download_pdf'),
