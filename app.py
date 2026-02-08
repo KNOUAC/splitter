@@ -3,9 +3,7 @@ import os
 import re
 import zipfile
 import io
-import pytesseract
 from PIL import Image, ImageOps
-from pytesseract import Output
 from pillow_heif import register_heif_opener
 
 # ==========================================
@@ -60,8 +58,8 @@ TRANSLATIONS = {
         'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.'
     },
     'upload_label': {
-        'Korean': '아래를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
-        'English': 'Tap below to select your images (JPG, PNG, HEIC, BMP)'
+        'Korean': '여기를 터치해 이미지 선택 (JPG, PNG, HEIC, BMP)',
+        'English': 'Touch here to select images (JPG, PNG, HEIC, BMP)'
     },
     'format_label': {
         'Korean': '저장 형식',
@@ -181,18 +179,16 @@ custom_style = """
         font-family: 'Trebuchet MS', sans-serif !important;
     }
 
-    /* 🔵 [수정됨] 라디오 버튼 선택 색상 (Red -> Blue) 강력 적용 */
-    /* Streamlit 라디오 버튼의 체크된 상태의 원(circle) 부분 */
+    /* 🔵 라디오 버튼 선택 색상 (Red -> Blue) 강력 적용 */
     div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
     }
-    /* 텍스트 색상도 파란색으로 (선택사항) */
     div[data-testid="stRadio"] label[data-checked="true"] p {
         color: #007bff !important;
     }
 
-    /* 🔵 [추가] 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강력 적용 */
+    /* 🔵 체크박스(PDF/ZIP) 선택 색상 (Red -> Blue) 강력 적용 */
     div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
@@ -258,43 +254,8 @@ custom_style = """
 st.markdown(custom_style, unsafe_allow_html=True)
 
 # ==========================================
-# [로직] 이미지 처리 함수 (OCR, PDF 등)
+# [로직] 이미지 처리 함수 (OCR 제거 및 파일명 기반 처리)
 # ==========================================
-def preprocess_image_for_ocr(img):
-    if img.mode in ('RGBA', 'P'):
-        img = img.convert('RGB')
-    gray = img.convert('L')
-    binary = gray.point(lambda p: 255 if p > 140 else 0)
-    return binary
-
-def find_largest_number_across_corners(half_image):
-    try:
-        w, h = half_image.size
-        crop_h = int(h * 0.15)
-        crop_w = int(w * 0.3)
-        roi_bl = half_image.crop((0, h - crop_h, crop_w, h))
-        roi_br = half_image.crop((w - crop_w, h - crop_h, w, h))
-        
-        candidates = []
-        for roi_img in [roi_bl, roi_br]:
-            processed_roi = preprocess_image_for_ocr(roi_img)
-            custom_config = r'--oem 3 --psm 6'
-            data = pytesseract.image_to_data(processed_roi, config=custom_config, output_type=Output.DICT)
-            
-            for i in range(len(data['text'])):
-                text = data['text'][i].strip()
-                num_text = re.sub(r'\D', '', text)
-                if num_text:
-                    if int(data['conf'][i]) > 30 and data['height'][i] > 5:
-                        candidates.append({'text': num_text, 'h': data['height'][i], 'c': data['conf'][i]})
-        
-        if candidates:
-            candidates.sort(key=lambda x: (x['h'], x['c']), reverse=True)
-            return candidates[0]['text']
-    except:
-        return None
-    return None
-
 def process_image_in_memory(uploaded_file):
     img = Image.open(uploaded_file)
     img = ImageOps.exif_transpose(img)
@@ -308,19 +269,13 @@ def process_image_in_memory(uploaded_file):
     img_l = img.crop((0, 0, c_x, h))
     img_r = img.crop((c_x, 0, w, h))
     
-    left_num = find_largest_number_across_corners(img_l)
-    right_num = find_largest_number_across_corners(img_r)
-    
+    # 🟢 [변경] OCR 로직 제거 -> 원본 파일명 기반 이름 생성
+    # 예: MyBook.jpg -> MyBook_01_L.jpg, MyBook_02_R.jpg
+    # 이렇게 하면 파일명 정렬 시 순서가 보장됩니다.
     name_only = os.path.splitext(uploaded_file.name)[0]
     
-    if left_num and right_num:
-        fname_l, fname_r = f"{left_num}.jpg", f"{right_num}.jpg"
-    elif not left_num and right_num:
-        fname_l, fname_r = f"{int(right_num)-1}.jpg", f"{right_num}.jpg"
-    elif left_num and not right_num:
-        fname_l, fname_r = f"{left_num}.jpg", f"{int(left_num)+1}.jpg"
-    else:
-        fname_l, fname_r = f"{name_only}_L.jpg", f"{name_only}_R.jpg"
+    fname_l = f"{name_only}_01_L.jpg"
+    fname_r = f"{name_only}_02_R.jpg"
         
     buf_l = io.BytesIO()
     img_l.save(buf_l, format="JPEG", quality=95)
@@ -378,20 +333,19 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 🔵 [수정됨] 파일 업로더 라벨 분리 (상태 유지를 위해)
-# 1. 화면에 보이는 라벨(텍스트)은 HTML로 별도로 그립니다.
+# 🔵 파일 업로더 라벨 분리 (상태 유지를 위해)
 st.markdown(
     f"<div style='text-align: center; font-weight: bold; margin-bottom: 10px;'>{get_text('upload_label')}</div>", 
     unsafe_allow_html=True
 )
 
-# 2. 실제 업로더는 고정된 label("static_label")을 사용하여 언어 변경 시에도 ID가 변하지 않게 합니다.
+# 실제 업로더는 고정된 label 사용
 uploaded_files = st.file_uploader(
-    "static_label", # 이 값이 바뀌지 않아야 Streamlit이 같은 위젯으로 인식함
+    "static_label", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
     key=f"uploader_{st.session_state.uploader_key}",
-    label_visibility="collapsed" # 실제 라벨은 숨김
+    label_visibility="collapsed" 
 )
 
 # 기능 컨트롤 영역
@@ -437,13 +391,15 @@ if uploaded_files:
                                 
                                 for fname, zip_buf, pdf_img in results:
                                     base, ext = os.path.splitext(fname)
+                                    # 중복 방지 (같은 파일명 존재 시)
                                     if any(x[0] == fname for x in processed_list):
                                         fname = f"{base}_{i}{ext}"
                                     processed_list.append((fname, zip_buf, pdf_img))
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 파일명을 기준으로 자연 정렬 (1, 2, 10, 11...)
+                            # 🟢 파일명 오름차순 정렬 (자연 정렬)
+                            # Filename_01_L -> Filename_02_R 순서로 정렬됨
                             processed_list.sort(key=lambda x: natural_keys(x[0]))
                             
                             st.session_state.processed_data = processed_list
