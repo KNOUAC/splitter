@@ -26,7 +26,7 @@ if 'processed_data' not in st.session_state:
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
 if 'language' not in st.session_state:
-    st.session_state.language = 'Korean'
+    st.session_state.language = 'Korean' # 기본값 한국어 고정
 
 def reset_app():
     # on_click 콜백이 끝나면 Streamlit이 '자동으로' 화면을 갱신합니다.
@@ -113,7 +113,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (Gothic A1 + 파란색 테마 + KRDS 스타일)
+# [스타일] CSS
 # ==========================================
 custom_style = """
 <style>
@@ -138,21 +138,6 @@ custom_style = """
         max-width: 700px;
     }
 
-    /* 🟢 커스텀 상단바 */
-    .custom-navbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background-color: white;
-        z-index: 9999;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
     /* 🟢 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
     .theowise-logo {
         font-family: 'Gothic A1', sans-serif !important;
@@ -161,67 +146,7 @@ custom_style = """
         color: #2c3e50;
         letter-spacing: -1px;
         text-decoration: none;
-        text-transform: uppercase;
-    }
-
-    /* 🟢 [수정] 언어 선택 버튼 (KRDS 스타일 - 텍스트형) */
-    [data-testid="stPopover"] > button {
-        border: none !important;
-        background: transparent !important;
-        color: #333 !important;
-        font-size: 16px !important; /* 텍스트 크기 조정 */
-        font-weight: 700 !important; /* 굵게 */
-        box-shadow: none !important;
-        padding: 0 10px !important;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    /* 메뉴 호버 시 블루 */
-    [data-testid="stPopover"] > button:hover {
-        color: #007bff !important;
-    }
-
-    /* 🟢 설정 메뉴 내부 폰트 */
-    [data-testid="stRadio"], 
-    [data-testid="stRadio"] label, 
-    [data-testid="stRadio"] div, 
-    [data-testid="stRadio"] p {
-        font-family: 'Gothic A1', sans-serif !important;
-    }
-
-    /* 🔵 라디오 버튼 선택 색상 (Blue) */
-    div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-    div[data-testid="stRadio"] label[data-checked="true"] p {
-        color: #007bff !important;
-    }
-
-    /* 🔵 체크박스 선택 색상 (Blue) */
-    div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-
-    /* 메인 타이틀 */
-    .main-title {
-        font-size: 26px;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        color: #111;
-        margin-top: 20px;
-    }
-    
-    /* 설명 텍스트 */
-    .sub-description {
-        text-align: center;
-        color: #666;
-        font-size: 15px;
-        margin-bottom: 30px;
-        line-height: 1.6;
+        /* text-transform: uppercase;  <-- 이 줄을 삭제하여 대소문자 구분되게 함 */
     }
 
     /* 🟢 업로드 박스 디자인 */
@@ -253,7 +178,7 @@ custom_style = """
         color: white !important;
     }
 
-    /* 🟢 파일 목록 삭제(X) 버튼 빨간색 제거 -> 회색/블루 */
+    /* 🟢 파일 목록 삭제(X) 버튼 */
     [data-testid="stFileUploaderDeleteBtn"] button {
         color: #888 !important;
         background: transparent !important;
@@ -288,6 +213,25 @@ custom_style = """
     div.stButton > button[kind="primary"]:focus { 
         box-shadow: none !important; 
         outline: none !important;
+    }
+
+    /* 메인 타이틀 */
+    .main-title {
+        font-size: 26px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #111;
+        margin-top: 20px;
+    }
+    
+    /* 설명 텍스트 */
+    .sub-description {
+        text-align: center;
+        color: #666;
+        font-size: 15px;
+        margin-bottom: 30px;
+        line-height: 1.6;
     }
 
     /* 다운로드 버튼 (Green 유지) */
@@ -333,9 +277,9 @@ def process_image_in_memory(uploaded_file):
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
-# [UI] 상단 네비게이션 바
+# [UI] 상단 네비게이션 바 (메뉴 삭제됨)
 # ==========================================
-# [수정] 언어 선택 메뉴 삭제 -> Theowise 로고만 중앙 상단에 표시
+# 로고만 중앙 상단에 표시 (대소문자 구분을 위해 CSS의 uppercase 제거 및 텍스트 수정)
 st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
