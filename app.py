@@ -29,11 +29,11 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # [수정됨] st.rerun() 제거
-    # on_click 콜백이 끝난 후 Streamlit이 자동으로 스크립트를 재실행하며
-    # 변경된 uploader_key가 적용된 새로운(빈) 업로더를 그립니다.
+    # 1. 데이터 및 키 초기화
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
+    # 2. [수정됨] 강제 리런 추가 (파일 업로더 잔상 제거를 위해 필수)
+    st.rerun()
 
 # ==========================================
 # [유틸] 자연 정렬 (Natural Sort) 함수
@@ -376,14 +376,16 @@ if uploaded_files:
             
             st.write("") # 간격
             
-            # 2. [추가] 정렬 순서 (오름차순/내림차순)
-            st.markdown(f"**{get_text('sort_label')}**")
-            sort_option = st.radio(
-                "Sort",
-                ["asc", "desc"],
-                format_func=lambda x: get_text('sort_asc') if x == 'asc' else get_text('sort_desc'),
-                label_visibility="collapsed"
-            )
+            # 2. [수정됨] PDF 선택 시에만 정렬 옵션 노출
+            sort_option = 'asc' # 기본값
+            if opt_pdf:
+                st.markdown(f"**{get_text('sort_label')}**")
+                sort_option = st.radio(
+                    "Sort",
+                    ["asc", "desc"],
+                    format_func=lambda x: get_text('sort_asc') if x == 'asc' else get_text('sort_desc'),
+                    label_visibility="collapsed"
+                )
 
         # [액션]
         with col_act:
@@ -419,7 +421,7 @@ if uploaded_files:
                                 
                                 progress_bar.progress((i + 1) / total)
                             
-                            # 🟢 정렬 로직 적용 (선택된 옵션에 따라)
+                            # 🟢 정렬 로직 적용
                             is_reverse = (sort_option == 'desc')
                             processed_list.sort(key=lambda x: natural_keys(x[0]), reverse=is_reverse)
                             
