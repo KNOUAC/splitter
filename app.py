@@ -113,16 +113,16 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
 
 # ==========================================
-# [스타일] CSS (Gothic A1 적용 + 파란색 테마)
+# [스타일] CSS (Gothic A1 + 파란색 테마 완벽 적용)
 # ==========================================
 custom_style = """
 <style>
     /* 폰트 임포트 (Gothic A1) */
-    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700;800;900&display=swap');
 
-    /* 전체 폰트 적용 */
-    html, body, [class*="css"] {
-        font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* 1. 전체 폰트 강제 적용 */
+    html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p {
+        font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #333;
     }
 
@@ -138,7 +138,7 @@ custom_style = """
         max-width: 700px;
     }
 
-    /* 🟢 커스텀 상단바 컨테이너 (Sticky) */
+    /* 🟢 커스텀 상단바 */
     .custom-navbar {
         position: fixed;
         top: 0;
@@ -151,40 +151,33 @@ custom_style = """
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 🟢 로고 스타일 (Impact - 브랜드 유지를 위해 유지) */
+    /* 🟢 [수정] 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
     .knouac-logo {
-        font-family: 'Impact', sans-serif !important;
-        font-size: 32px;
-        font-weight: 400;
+        font-family: 'Gothic A1', sans-serif !important;
+        font-size: 28px;
+        font-weight: 900 !important; /* 가장 굵게 */
         color: #2c3e50;
-        letter-spacing: 1px;
+        letter-spacing: -1px;
         text-decoration: none;
+        text-transform: uppercase;
     }
 
-    /* 팝오버(메뉴) 버튼 커스텀 */
-    [data-testid="stPopover"] {
-        display: flex;
-        justify-content: flex-end;
-    }
+    /* ☰ 메뉴 버튼 */
     [data-testid="stPopover"] > button {
         border: none !important;
         background: transparent !important;
         color: #333 !important;
         font-size: 24px !important;
-        padding: 0 10px !important;
-        margin-top: -5px;
         box-shadow: none !important;
     }
-    /* 🔵 메뉴 버튼 호버 색상 변경 (Red -> Blue) */
+    /* 메뉴 호버 시 블루 */
     [data-testid="stPopover"] > button:hover {
         color: #007bff !important;
-        background: transparent !important;
     }
 
-    /* 🟢 설정 메뉴 내부 폰트 변경: Gothic A1으로 통일 */
+    /* 🟢 설정 메뉴 내부 폰트 */
     [data-testid="stRadio"], 
     [data-testid="stRadio"] label, 
     [data-testid="stRadio"] div, 
@@ -192,7 +185,7 @@ custom_style = """
         font-family: 'Gothic A1', sans-serif !important;
     }
 
-    /* 🔵 라디오 버튼 선택 색상 (Red -> Blue) */
+    /* 🔵 라디오 버튼 선택 색상 (Blue) */
     div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
@@ -201,7 +194,7 @@ custom_style = """
         color: #007bff !important;
     }
 
-    /* 🔵 체크박스 선택 색상 (Red -> Blue) */
+    /* 🔵 체크박스 선택 색상 (Blue) */
     div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
         background-color: #007bff !important;
         border-color: #007bff !important;
@@ -226,24 +219,55 @@ custom_style = """
         line-height: 1.6;
     }
 
-    /* 🟢 업로드 박스 디자인 */
+    /* 🟢 [수정] 업로드 박스 디자인 (빨간색 완전 제거) */
     [data-testid="stFileUploader"] section {
-        border: 4px dashed #ccc !important;
+        border: 3px dashed #ccc !important;
         background-color: #fafafa !important;
         border-radius: 10px !important;
         padding: 40px 20px !important;
-        text-align: center;
     }
-    
-    /* 🔵 업로드 박스 호버/드래그 시 색상 변경 (Red -> Blue) */
+    /* 업로드 박스 호버 (블루) */
     [data-testid="stFileUploader"] section:hover {
         border-color: #007bff !important;
         background-color: #f0f8ff !important;
     }
+    
+    /* 🟢 [추가] 업로더 내부 버튼 ('Browse files') -> 파란색 강제 적용 */
+    [data-testid="stFileUploader"] button {
+        border-color: #007bff !important;
+        color: #007bff !important;
+        background-color: transparent !important;
+    }
+    [data-testid="stFileUploader"] button:hover {
+        border-color: #0056b3 !important;
+        color: #0056b3 !important;
+        background-color: #eef6ff !important;
+    }
+    [data-testid="stFileUploader"] button:active {
+        background-color: #007bff !important;
+        color: white !important;
+    }
 
-    /* 🔵 [변경] 변환 버튼 스타일 (Red -> Blue) */
+    /* 🟢 [추가] 파일 목록 삭제(X) 버튼 빨간색 제거 -> 회색/블루 */
+    [data-testid="stFileUploaderDeleteBtn"] button {
+        color: #888 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+    [data-testid="stFileUploaderDeleteBtn"] button:hover {
+        color: #333 !important;
+        background: #eee !important;
+    }
+    [data-testid="stFileUploaderDeleteBtn"] svg {
+        fill: #888 !important;
+    }
+    [data-testid="stFileUploaderDeleteBtn"]:hover svg {
+        fill: #333 !important;
+    }
+
+    /* 🟢 변환 버튼 (Primary) -> Blue */
     div.stButton > button[kind="primary"] {
-        background-color: #007bff !important; /* 파란색 */
+        background-color: #007bff !important;
         border: none;
         color: white;
         width: 100%;
@@ -252,10 +276,16 @@ custom_style = """
         font-weight: 600;
         border-radius: 8px;
     }
-    /* 버튼 호버 시 더 진한 파란색 */
-    div.stButton > button[kind="primary"]:hover { background-color: #0056b3 !important; }
-    
-    /* 다운로드 버튼 (초록색 유지) */
+    div.stButton > button[kind="primary"]:hover { 
+        background-color: #0056b3 !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    div.stButton > button[kind="primary"]:focus { 
+        box-shadow: none !important; 
+        outline: none !important;
+    }
+
+    /* 다운로드 버튼 (Green 유지) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         border: none;
@@ -303,11 +333,11 @@ def process_image_in_memory(uploaded_file):
 c1, c2 = st.columns([8, 1])
 
 with c1:
+    # 폰트 변경 반영됨 (Impact -> Gothic A1)
     st.markdown('<div class="knouac-logo">KNOUAC</div>', unsafe_allow_html=True)
 
 with c2:
     with st.popover("☰", use_container_width=False):
-        # 폰트 통일 (Gothic A1)
         st.markdown(
             f"<div style='font-family: Gothic A1; font-weight: bold;'>{get_text('menu_settings')}</div>", 
             unsafe_allow_html=True
@@ -326,7 +356,7 @@ with c2:
             st.rerun()
 
         st.divider()
-        st.caption("ver 1.0.1 theowise")
+        st.caption("ver 1.0.1 THEOHYEON")
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
