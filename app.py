@@ -1,3 +1,11 @@
+네, 요청하신 디자인 사항을 반영하여 **체크박스/라디오 버튼 선택 색상**과 **변환 시작 버튼**을 **하늘색(Sky Blue, `#38b6ff`)** 계열로 변경했습니다.
+
+1. **체크박스 & 라디오 버튼:** 선택 시 빨간색 대신 **밝은 하늘색**이 적용되도록 CSS를 강화했습니다.
+2. **변환 시작 버튼:** 배경색을 **하늘색**으로 변경하고, 글자가 잘 보이도록 텍스트 색상을 **흰색**으로 유지하되 그림자 효과를 살짝 조정했습니다.
+
+아래가 최종 수정된 코드입니다.
+
+```python
 import streamlit as st
 import os
 import re
@@ -26,7 +34,7 @@ if 'processed_data' not in st.session_state:
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
 if 'language' not in st.session_state:
-    st.session_state.language = 'Korean' # 기본값 한국어 고정
+    st.session_state.language = 'Korean'
 
 def reset_app():
     # on_click 콜백이 끝나면 Streamlit이 '자동으로' 화면을 갱신합니다.
@@ -138,7 +146,7 @@ custom_style = """
         max-width: 700px;
     }
 
-    /* 🟢 로고 스타일: Gothic A1 ExtraBold (900) 적용 */
+    /* 🟢 로고 스타일 */
     .theowise-logo {
         font-family: 'Gothic A1', sans-serif !important;
         font-size: 28px;
@@ -146,36 +154,68 @@ custom_style = """
         color: #2c3e50;
         letter-spacing: -1px;
         text-decoration: none;
-        /* text-transform: uppercase;  <-- 이 줄을 삭제하여 대소문자 구분되게 함 */
     }
 
-    /* 🟢 업로드 박스 디자인 */
+    /* 🟢 업로드 박스 디자인 (하늘색 테두리 호버) */
     [data-testid="stFileUploader"] section {
         border: 3px dashed #ccc !important;
         background-color: #fafafa !important;
         border-radius: 10px !important;
         padding: 40px 20px !important;
     }
-    /* 업로드 박스 호버 (블루) */
+    /* 업로드 박스 호버 (Sky Blue) */
     [data-testid="stFileUploader"] section:hover {
-        border-color: #007bff !important;
-        background-color: #f0f8ff !important;
+        border-color: #38b6ff !important;
+        background-color: #e1f5fe !important;
     }
     
-    /* 🔵 업로더 내부 버튼 ('Browse files') -> 파란색 강제 적용 */
+    /* 🔵 업로더 내부 버튼 ('Browse files') -> 하늘색 */
     [data-testid="stFileUploader"] button {
-        border-color: #007bff !important;
-        color: #007bff !important;
+        border-color: #38b6ff !important;
+        color: #38b6ff !important;
         background-color: transparent !important;
     }
     [data-testid="stFileUploader"] button:hover {
-        border-color: #0056b3 !important;
-        color: #0056b3 !important;
-        background-color: #eef6ff !important;
+        border-color: #0288d1 !important;
+        color: #0288d1 !important;
+        background-color: #e1f5fe !important;
     }
-    [data-testid="stFileUploader"] button:active {
-        background-color: #007bff !important;
-        color: white !important;
+    
+    /* 🟢 라디오 버튼 선택 색상 (Sky Blue) */
+    div[data-testid="stRadio"] label[data-checked="true"] div[role="radio"] {
+        background-color: #38b6ff !important;
+        border-color: #38b6ff !important;
+    }
+    /* 라디오 버튼 텍스트 색상 (선택 시) */
+    div[data-testid="stRadio"] label[data-checked="true"] p {
+        color: #38b6ff !important;
+    }
+
+    /* 🟢 체크박스 선택 색상 (Sky Blue) */
+    div[data-testid="stCheckbox"] label[data-checked="true"] span[role="checkbox"] {
+        background-color: #38b6ff !important;
+        border-color: #38b6ff !important;
+    }
+
+    /* 🟢 변환 버튼 (Primary) -> Sky Blue */
+    div.stButton > button[kind="primary"] {
+        background-color: #38b6ff !important; /* 하늘색 */
+        border: none;
+        color: white !important; /* 글자색 흰색 고정 */
+        width: 100%;
+        padding: 0.7rem;
+        font-size: 16px;
+        font-weight: 700; /* 글자 굵게 */
+        border-radius: 8px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1); /* 가독성 향상 그림자 */
+    }
+    div.stButton > button[kind="primary"]:hover { 
+        background-color: #0288d1 !important; /* 호버 시 진한 하늘색 */
+        box-shadow: 0 4px 8px rgba(56, 182, 255, 0.3);
+    }
+    div.stButton > button[kind="primary"]:focus { 
+        box-shadow: none !important; 
+        outline: none !important;
     }
 
     /* 🟢 파일 목록 삭제(X) 버튼 */
@@ -193,26 +233,6 @@ custom_style = """
     }
     [data-testid="stFileUploaderDeleteBtn"]:hover svg {
         fill: #333 !important;
-    }
-
-    /* 🟢 변환 버튼 (Primary) -> Blue */
-    div.stButton > button[kind="primary"] {
-        background-color: #007bff !important;
-        border: none;
-        color: white;
-        width: 100%;
-        padding: 0.7rem;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 8px;
-    }
-    div.stButton > button[kind="primary"]:hover { 
-        background-color: #0056b3 !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    div.stButton > button[kind="primary"]:focus { 
-        box-shadow: none !important; 
-        outline: none !important;
     }
 
     /* 메인 타이틀 */
@@ -277,9 +297,8 @@ def process_image_in_memory(uploaded_file):
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
-# [UI] 상단 네비게이션 바 (메뉴 삭제됨)
+# [UI] 상단 네비게이션 바
 # ==========================================
-# 로고만 중앙 상단에 표시 (대소문자 구분을 위해 CSS의 uppercase 제거 및 텍스트 수정)
 st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
@@ -410,3 +429,5 @@ if uploaded_files:
         st.write("")
         if st.button(get_text('reset_btn'), on_click=reset_app, use_container_width=True):
             pass
+
+```
