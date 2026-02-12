@@ -82,11 +82,11 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key].get('English', TRANSLATIONS[key]['Korean']))
 
 # ==========================================
-# [스타일] CSS (수정됨: 체크박스/라디오 색상 강제 적용)
+# [스타일] CSS (버튼: 흰색/Bold, 체크박스: 검정)
 # ==========================================
 custom_style = """
 <style>
-    /* Global Reset & Fonts */
+    /* Global Reset */
     * { box-sizing: border-box; }
     html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p, h1, h2, label {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
@@ -133,24 +133,30 @@ custom_style = """
         border-color: #007bff !important;
         background: #f0f8ff !important;
     }
-    [data-testid="stFileUploader"] button[kind="secondary"] {
-        background-color: #007bff !important;
-        color: white !important;
-        border: none !important;
-    }
 
-    /* [버튼] 변환 시작하기 (파란색 유지, 글자 흰색/Bold) */
+    /* ================================================================
+       [버튼 스타일] 변환 시작하기
+       - 배경: 파란색 (#007bff)
+       - 글자: 흰색 (#ffffff) / 굵게 (Bold)
+       ================================================================ */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
-        color: #ffffff !important;
+        color: #ffffff !important; /* 글자색 흰색 */
         border: none !important;
         padding: 15px !important;
         border-radius: 8px !important;
         font-size: 16px !important;
-        font-weight: 700 !important; /* Bold */
+        font-weight: 700 !important; /* 글자 굵게 (Bold) */
         margin-top: 10px;
         box-shadow: none !important;
     }
+    
+    /* 버튼 내부 텍스트(p태그 등)까지 강제 적용 */
+    div.stButton > button[kind="primary"] * {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
     div.stButton > button[kind="primary"]:hover { 
         background-color: #0056b3 !important; 
     }
@@ -160,32 +166,29 @@ custom_style = """
     }
 
     /* ================================================================
-       [체크박스 & 라디오 버튼 색상 강제 변경: 빨강 -> 검정(#333)]
+       [체크박스 & 라디오 버튼 색상: 검정(#333)]
        ================================================================ */
-    
-    /* 1. HTML 표준 accent-color (최신 브라우저용) */
+    /* 1. HTML 표준 accent-color */
     input[type="checkbox"], input[type="radio"] {
         accent-color: #333333 !important;
     }
-
-    /* 2. Streamlit 테마 변수 강제 오버라이드 (가장 강력함) */
+    
+    /* 2. Streamlit 테마 변수 강제 오버라이드 (기본 붉은색 제거) */
     :root {
         --primary-color: #333333 !important;
     }
 
-    /* 3. Streamlit/BaseWeb 내부 구조 직접 타겟팅 (보완용) */
-    /* 체크박스 선택 시 배경 */
+    /* 3. 내부 요소 직접 타겟팅 */
     div[data-baseweb="checkbox"] [aria-checked="true"] {
         background-color: #333333 !important;
         border-color: #333333 !important;
     }
-    /* 라디오 버튼 선택 시 테두리/내부 */
     div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
-        background-color: #333333 !important; /* 채워진 원 */
+        background-color: #333333 !important;
         border-color: #333333 !important;
     }
     div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
-        background-color: #ffffff !important; /* 가운데 흰 점 */
+        background-color: #ffffff !important;
     }
 
     /* Footer */
@@ -313,7 +316,7 @@ if uploaded_files:
         btn_text_base = get_text('split_btn')
         count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
         
-        # 버튼 (type="primary"로 설정하여 CSS 적용)
+        # 버튼에 type="primary"가 적용되어 CSS 스타일을 받습니다.
         if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
             if not opt_pdf and not opt_zip:
                 st.warning(get_text('warning_msg'))
