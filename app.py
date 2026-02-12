@@ -223,11 +223,7 @@ custom_style = """
         border: none !important;
     }
 
-    /* [수정 1] 변환 버튼 스타일 
-       - 텍스트 색상: 흰색 (#ffffff)
-       - 폰트 굵기: Bold (700)
-       - 배경색: 파란색 (#007bff) 유지
-    */
+    /* 변환 버튼 스타일 (흰색, Bold) */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
         color: #ffffff !important;
@@ -284,26 +280,45 @@ custom_style = """
         font-size: 14px !important;
     }
 
-    /* [수정 2] 체크박스 & 라디오 버튼 색상 변경 (Red -> Dark Grey) 
-       - 체크된 상태의 배경색을 #333333(진한 회색/검정)으로 변경
-    */
+    /* ==================================================================
+       [수정됨] 체크박스 & 라디오 버튼 색상 변경 (Red -> Dark Grey/Black) 
+       ================================================================== */
     
-    /* 체크박스 (Checked) */
+    /* 1. 브라우저 기본 스타일 제거 및 accent-color 적용 (최신 브라우저 지원) */
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #333333 !important; /* 검정색 계열 */
+    }
+
+    /* 2. Webkit 브라우저(Chrome, Safari 등)를 위한 강력한 오버라이드 */
+    
+    /* 체크박스 (Checked 상태) */
+    input[type="checkbox"]:checked {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+        /* 체크 표시 커스텀 (선택 사항, 기본 체크 표시가 보이지 않을 경우 사용) */
+        /* background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e"); */
+    }
+
+    /* 라디오 버튼 (Checked 상태) */
+    input[type="radio"]:checked {
+        background-color: #ffffff !important; /* 내부 원 색상 */
+        border: 4px solid #333333 !important; /* 외부 테두리 색상 및 두께 */
+    }
+    
+    /* (선택 사항) Streamlit의 커스텀 위젯 구조에 맞춘 스타일링 (위의 방법이 안 먹힐 경우 사용) */
+    /*
     div[data-baseweb="checkbox"] [aria-checked="true"] {
         background-color: #333333 !important;
         border-color: #333333 !important;
     }
-    
-    /* 라디오 버튼 (Checked) - 외부 원 */
     div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
         border-color: #333333 !important;
         background-color: #333333 !important;
     }
-    
-    /* 라디오 버튼 (Checked) - 내부 점 (필요 시) */
     div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
         background-color: #ffffff !important;
     }
+    */
 
 </style>
 """
