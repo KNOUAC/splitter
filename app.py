@@ -44,7 +44,6 @@ def natural_keys(text):
 # ==========================================
 # [다국어 데이터] (5개 언어 지원 확장)
 # ==========================================
-# 매핑: 표시용 라벨 -> 내부용 키
 LANG_MAP = {
     '한국어': 'Korean',
     'English (영어)': 'English',
@@ -52,11 +51,8 @@ LANG_MAP = {
     '日本語 (일본어)': 'Japanese',
     'français (프랑스어)': 'French'
 }
-
-# 내부용 키 -> 표시용 라벨 (역매핑)
 LANG_MAP_REV = {v: k for k, v in LANG_MAP.items()}
 
-# 번역 딕셔너리 (새로운 언어는 영어/한국어로 폴백 처리)
 TRANSLATIONS = {
     'page_title': {
         'Korean': 'T-Splitter',
@@ -167,7 +163,6 @@ TRANSLATIONS = {
 
 def get_text(key):
     lang = st.session_state.language
-    # 해당 언어 키가 없으면 영어, 그것도 없으면 한국어 반환
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key].get('English', TRANSLATIONS[key]['Korean']))
 
 # ==========================================
@@ -212,33 +207,44 @@ custom_style = """
         padding-bottom: 1.5rem;
     }
 
-    /* 🟢 [커스텀 언어 버튼 스타일] - KRDS 스타일 모방 */
-    /* Streamlit Popover 버튼을 타겟팅하여 스타일 재정의 */
+    /* 🟢 [수정됨] 언어 변경 버튼 스타일 - 테두리 없고 깔끔하게 */
+    /* Popover 컨테이너 우측 정렬 */
+    [data-testid="stPopover"] {
+        display: flex;
+        justify-content: flex-end;
+    }
+    /* 버튼 자체 스타일링: 투명 배경, 테두리 제거, 텍스트 정렬 */
     [data-testid="stPopover"] > button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: space-between;
-        background-color: #fff !important;
-        border: 1px solid #d6d6d6 !important;
-        border-radius: 4px !important;
-        padding: 0 12px !important;
-        height: 32px !important; /* small size */
-        font-size: 13px !important;
-        color: #444 !important;
+        border: none !important;
+        background: transparent !important;
         box-shadow: none !important;
-        transition: all 0.2s;
+        padding: 6px 8px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #555 !important;
+        display: flex;
+        align-items: center;
+        height: auto !important;
         width: auto !important;
-        min-width: 100px;
+        min-width: auto !important;
     }
+    /* 호버 효과: 텍스트 색상 변경 */
     [data-testid="stPopover"] > button:hover {
-        border-color: #333 !important;
-        background-color: #fcfcfc !important;
-        color: #111 !important;
+        color: #007bff !important;
+        background: #f8f9fa !important; /* 살짝 밝은 배경 추가하여 호버 영역 인지 */
+        border-radius: 4px !important;
     }
-    /* 아이콘 시각적 조정 */
-    [data-testid="stPopover"] > button span {
-        margin-right: 5px;
+    /* 버튼 내부 콘텐츠(아이콘+텍스트) 정렬 */
+    [data-testid="stPopover"] > button > div {
+        display: flex;
+        align-items: center;
+        gap: 6px; /* 아이콘과 텍스트 사이 간격 */
     }
+    /* 기본 "expand_more" 텍스트가 보인다면 숨김 처리 (필요시 주석 해제) */
+    /* [data-testid="stPopover"] > button > div > span[data-testid="stBaseButton-secondaryIcon"] {
+        display: none !important;
+    } */
+
 
     /* Upload Area */
     [data-testid="stFileUploader"] section {
@@ -330,11 +336,8 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 🟢 [수정됨] 언어 변경 버튼 (KRDS 스타일 구현)
-    # CSS로 스타일링된 Streamlit Popover
-    # "🌐 언어 변경 ▾" 텍스트를 버튼에 표시
-    with st.popover("🌐 언어 변경", use_container_width=False):
-        # 현재 선택된 언어의 라벨 찾기
+    # 언어 변경 버튼 (Popover)
+    with st.popover("🌐 언어 변경 ▾", use_container_width=False):
         current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
         
         selected_lang_label = st.radio(
@@ -344,7 +347,6 @@ with h_col2:
             label_visibility="collapsed"
         )
         
-        # 선택이 변경되면 세션 상태 업데이트 및 리런
         new_lang_code = LANG_MAP[selected_lang_label]
         if new_lang_code != st.session_state.language:
             st.session_state.language = new_lang_code
