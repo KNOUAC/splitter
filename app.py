@@ -180,7 +180,7 @@ custom_style = """
         color: #333;
     }
     
-    /* 3. 테마 색상 변수 설정 */
+    /* 3. 테마 색상 변수 설정 (기본적으로 짙은 회색으로 설정하여 붉은색 방지) */
     :root {
         --primary-color: #333333 !important;
         --st-color-primary: #333333 !important;
@@ -229,38 +229,19 @@ custom_style = """
         text-decoration: none;
     }
 
-    /* 🟢 [수정됨] Language 버튼 스타일 (테두리 제거, 검은색 폰트) */
-    [data-testid="stPopover"] {
-        display: flex;
-        justify-content: flex-end;
+    /* 언어 변경 셀렉트박스 스타일 - 깔끔하게 헤더에 통합 */
+    [data-testid="stSelectbox"] {
+        margin-top: 5px; /* 헤더 텍스트와 수직 정렬 보정 */
     }
-    [data-testid="stPopover"] > button {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        outline: none !important;
-        padding: 6px 8px !important;
+    [data-testid="stSelectbox"] > div > div {
+        background-color: transparent !important;
+        border: 1px solid #eee !important;
+        color: #555 !important;
         font-size: 14px !important;
-        font-weight: 600 !important;
-        
-        /* 텍스트 및 아이콘 색상: 검은색(#333) */
-        color: #333 !important;
-        
-        display: flex;
-        align-items: center;
-        height: auto !important;
-        width: auto !important;
-        min-width: auto !important;
+        box-shadow: none !important;
     }
-    [data-testid="stPopover"] > button:hover {
-        color: #000 !important; /* 호버 시 완전 검정 */
-        background: #f4f4f4 !important; /* 호버 시 아주 연한 회색 */
-        border-radius: 4px !important;
-    }
-    [data-testid="stPopover"] > button > div {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    [data-testid="stSelectbox"] > div > div:hover {
+        border-color: #007bff !important;
     }
 
     /* Upload Area */
@@ -270,7 +251,7 @@ custom_style = """
         border-radius: 10px !important;
     }
     [data-testid="stFileUploader"] section:hover {
-        border-color: #333 !important;
+        border-color: #333 !important; /* 호버 시 블랙 계열 */
         background: #f0f0f0 !important;
     }
     [data-testid="stFileUploader"] button[kind="secondary"] {
@@ -280,7 +261,7 @@ custom_style = """
         border: 1px solid #38b6ff !important;
     }
 
-    /* 체크박스 색상 (Black/Grey) */
+    /* 🟢 체크박스 색상 (Red -> Black/Grey) */
     div[data-testid="stCheckbox"] label > div:first-child > div[role="checkbox"][aria-checked="true"] {
         background-color: #333333 !important;
         border-color: #333333 !important;
@@ -289,7 +270,7 @@ custom_style = """
         fill: white !important;
     }
     
-    /* 라디오 버튼 색상 (Black/Grey) */
+    /* 🟢 라디오 버튼 색상 (Red -> Black/Grey) */
     div[data-testid="stRadio"] label[data-checked="true"] > div:first-child {
         background-color: #333333 !important;
         border-color: #333333 !important;
@@ -298,7 +279,7 @@ custom_style = """
         color: #333333 !important;
     }
 
-    /* 변환 버튼 (Primary) -> Sky Blue, White Text, Bold */
+    /* 🟢 변환 버튼 (Primary) -> Sky Blue, White Text, Bold */
     div.stButton > button[kind="primary"] {
         background-color: #38b6ff !important;
         color: #ffffff !important;
@@ -314,7 +295,7 @@ custom_style = """
         background-color: #0288d1 !important; 
     }
 
-    /* Download Button */
+    /* Download Button (Secondary/Success) */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         color: white !important;
@@ -387,21 +368,28 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 🟢 [수정됨] 버튼 텍스트 "Language", 색상 및 테두리는 CSS로 처리
-    with st.popover("🌐 Language ▾", use_container_width=False):
-        current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
-        
-        selected_lang_label = st.radio(
-            "Select Language",
-            list(LANG_MAP.keys()),
-            index=list(LANG_MAP.keys()).index(current_label),
-            label_visibility="collapsed"
-        )
-        
-        new_lang_code = LANG_MAP[selected_lang_label]
-        if new_lang_code != st.session_state.language:
-            st.session_state.language = new_lang_code
-            st.rerun()
+    # 언어 변경 UI (Selectbox - 드롭다운 형식)
+    current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
+    
+    # 키 리스트와 현재 인덱스 찾기
+    lang_options = list(LANG_MAP.keys())
+    try:
+        current_index = lang_options.index(current_label)
+    except ValueError:
+        current_index = 0
+
+    selected_lang_label = st.selectbox(
+        "Language",
+        options=lang_options,
+        index=current_index,
+        label_visibility="collapsed"
+    )
+    
+    # 선택 변경 시 상태 업데이트 및 리로드
+    new_lang_code = LANG_MAP[selected_lang_label]
+    if new_lang_code != st.session_state.language:
+        st.session_state.language = new_lang_code
+        st.rerun()
 
 st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
 
@@ -469,7 +457,7 @@ if uploaded_files:
                         for fname, zip_buf, pdf_img in results:
                             base, ext = os.path.splitext(fname)
                             if any(x[0] == fname for x in processed_list):
-                                        fname = f"{base}_{i}{ext}"
+                                    fname = f"{base}_{i}{ext}"
                             processed_list.append((fname, zip_buf, pdf_img))
                         
                         progress_bar.progress((i + 1) / total)
