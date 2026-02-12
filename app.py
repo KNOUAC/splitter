@@ -223,15 +223,15 @@ custom_style = """
         border: none !important;
     }
 
-    /* 🟢 [수정됨] 변환 버튼 스타일 (흰색, Bold) */
+    /* 변환 버튼 스타일 (흰색, Bold) */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
-        color: #ffffff !important;   /* 흰색 텍스트 강제 적용 */
+        color: #ffffff !important;
         border: none !important;
         padding: 15px !important;
         border-radius: 8px !important;
         font-size: 16px !important;
-        font-weight: bold !important; /* 굵게(Bold) 처리 */
+        font-weight: bold !important;
         margin-top: 10px;
         box-shadow: none !important;
     }
@@ -239,7 +239,7 @@ custom_style = """
         background-color: #0056b3 !important; 
     }
 
-    /* Download Button (Secondary/Success) */
+    /* Download Button */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         color: white !important;
@@ -259,6 +259,25 @@ custom_style = """
         font-size: 13px;
         color: #888;
         line-height: 1.6;
+    }
+    
+    /* 🟢 [수정됨] 드롭다운 박스(Selectbox) 스타일 강제 적용 */
+    /* 1. 선택된 값 (닫혀있을 때) 텍스트 크기 및 박스 높이 조정 */
+    div[data-baseweb="select"] > div {
+        font-size: 14px !important;     /* 글자 크기 */
+        padding-top: 2px !important;    /* 상단 여백 축소 */
+        padding-bottom: 2px !important; /* 하단 여백 축소 */
+        min-height: 32px !important;    /* 박스 높이 축소 */
+    }
+    
+    /* 2. 선택된 값 내부의 텍스트 컨테이너 */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
+        font-size: 13px !important;
+    }
+
+    /* 3. 드롭다운 메뉴 아이템 (펼쳤을 때) 텍스트 크기 */
+    ul[data-testid="stSelectboxVirtualDropdown"] li[role="option"] {
+        font-size: 14px !important;
     }
 </style>
 """
@@ -303,11 +322,12 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # [수정됨] 언어 변경 UI: Selectbox 형태로 변경 (라벨 포함)
-    st.markdown('<div style="font-size:13px; font-weight:600; color:#555; margin-bottom:4px;">Language</div>', unsafe_allow_html=True)
+    # 라벨에 지구본 이모지 추가
+    st.markdown('<div style="font-size:13px; font-weight:600; color:#555; margin-bottom:4px;">🌎 Language</div>', unsafe_allow_html=True)
     
     current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
     
+    # CSS에서 stSelectbox 글꼴 크기와 높이를 작게 조정해두었습니다.
     selected_lang_label = st.selectbox(
         "Language",
         list(LANG_MAP.keys()),
