@@ -42,7 +42,7 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # ==========================================
-# [다국어 데이터] (5개 언어 지원)
+# [다국어 데이터]
 # ==========================================
 LANG_MAP = {
     '한국어': 'Korean',
@@ -54,13 +54,7 @@ LANG_MAP = {
 LANG_MAP_REV = {v: k for k, v in LANG_MAP.items()}
 
 TRANSLATIONS = {
-    'page_title': {
-        'Korean': 'T-Splitter',
-        'English': 'T-Splitter',
-        'Chinese': 'T-Splitter',
-        'Japanese': 'T-Splitter',
-        'French': 'T-Splitter'
-    },
+    'page_title': { 'Korean': 'T-Splitter', 'English': 'T-Splitter', 'Chinese': 'T-Splitter', 'Japanese': 'T-Splitter', 'French': 'T-Splitter' },
     'sub_description': {
         'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공됩니다.',
         'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.',
@@ -68,97 +62,19 @@ TRANSLATIONS = {
         'Japanese': '2ページを1枚にスキャンした画像をアップロードすると、<br>半分に分割して1つのPDFまたはZIPファイルとして提供されます。',
         'French': 'Si vous téléchargez une image contenant deux pages numérisées ensemble,<br> elle sera divisée en deux pages distinctes et fournie sous forme de fichier PDF ou ZIP unique.'
     },
-    'upload_label': {
-        'Korean': '이미지 파일 업로드',
-        'English': 'Upload Image Files',
-        'Chinese': '上传图像文件',
-        'Japanese': '画像ファイルをアップロード',
-        'French': 'Télécharger des fichiers image'
-    },
-    'format_label': {
-        'Korean': '저장 형식',
-        'English': 'Save Format',
-        'Chinese': '保存格式',
-        'Japanese': '保存形式',
-        'French': 'Format d\'enregistrement'
-    },
-    'sort_label': { 
-        'Korean': '정렬 순서 (파일명 기준)',
-        'English': 'Sort Order (Filename)',
-        'Chinese': '排序顺序 (文件名)',
-        'Japanese': '並び順 (ファイル名)',
-        'French': 'Ordre de tri (nom de fichier)'
-    },
-    'sort_asc': { 
-        'Korean': '오름차순 (1→9)',
-        'English': 'Ascending (1→9)',
-        'Chinese': '升序 (1→9)',
-        'Japanese': '昇順 (1→9)',
-        'French': 'Croissant (1→9)'
-    },
-    'sort_desc': { 
-        'Korean': '내림차순 (9→1)',
-        'English': 'Descending (9→1)',
-        'Chinese': '降序 (9→1)',
-        'Japanese': '降順 (9→1)',
-        'French': 'Décroissant (9→1)'
-    },
-    'split_btn': {
-        'Korean': '변환 시작하기',
-        'English': 'Start Converting',
-        'Chinese': '开始转换',
-        'Japanese': '変換を開始',
-        'French': 'Commencer la conversion'
-    },
-    'warning_msg': {
-        'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
-        'English': '⚠️ Please select at least one format (PDF or ZIP)',
-        'Chinese': '⚠️ 请至少选择一种格式 (PDF 或 ZIP)',
-        'Japanese': '⚠️ 保存する形式を少なくとも1つ選択してください (PDF または ZIP)',
-        'French': '⚠️ Veuillez sélectionner au moins un format (PDF ou ZIP)'
-    },
-    'processing_msg': {
-        'Korean': '처리 중...',
-        'English': 'Processing...',
-        'Chinese': '处理中...',
-        'Japanese': '処理中...',
-        'French': 'Traitement...'
-    },
-    'download_pdf': {
-        'Korean': '📗 PDF 다운로드',
-        'English': '📗 Download PDF',
-        'Chinese': '📗 下载 PDF',
-        'Japanese': '📗 PDFをダウンロード',
-        'French': '📗 Télécharger le PDF'
-    },
-    'download_zip': {
-        'Korean': '🗂️ ZIP 다운로드',
-        'English': '🗂️ Download ZIP',
-        'Chinese': '🗂️ 下载 ZIP',
-        'Japanese': '🗂️ ZIPをダウンロード',
-        'French': '🗂️ Télécharger le ZIP'
-    },
-    'reset_btn': {
-        'Korean': '🗑️ 처음으로 (초기화)',
-        'English': '🗑️ Reset (Start Over)',
-        'Chinese': '🗑️ 重置 (重新开始)',
-        'Japanese': '🗑️ リセット (最初から)',
-        'French': '🗑️ Réinitialiser'
-    },
-     'footer_copyright': {
-        'Korean': '© 2026 T-Splitter. All rights reserved.',
-        'English': '© 2026 T-Splitter. All rights reserved.',
-        'Chinese': '© 2026 T-Splitter. All rights reserved.',
-        'Japanese': '© 2026 T-Splitter. All rights reserved.',
-        'French': '© 2026 T-Splitter. All rights reserved.'
-    },
-    'footer_contact': {
-        'Korean': '문의: hoon1018@knou.ac.kr',
-        'English': 'Contact: hoon1018@knou.ac.kr',
-        'Chinese': 'Contact: hoon1018@knou.ac.kr',
-        'Japanese': 'Contact: hoon1018@knou.ac.kr',
-        'French': 'Contact: hoon1018@knou.ac.kr'
-    }
+    'upload_label': { 'Korean': '이미지 파일 업로드', 'English': 'Upload Image Files', 'Chinese': '上传图像文件', 'Japanese': '画像ファイルをアップロード', 'French': 'Télécharger des fichiers image' },
+    'format_label': { 'Korean': '저장 형식', 'English': 'Save Format', 'Chinese': '保存格式', 'Japanese': '保存形式', 'French': 'Format d\'enregistrement' },
+    'sort_label': { 'Korean': '정렬 순서 (파일명 기준)', 'English': 'Sort Order (Filename)', 'Chinese': '排序顺序 (文件名)', 'Japanese': '並び順 (ファイル名)', 'French': 'Ordre de tri (nom de fichier)' },
+    'sort_asc': { 'Korean': '오름차순 (1→9)', 'English': 'Ascending (1→9)', 'Chinese': '升序 (1→9)', 'Japanese': '昇順 (1→9)', 'French': 'Croissant (1→9)' },
+    'sort_desc': { 'Korean': '내림차순 (9→1)', 'English': 'Descending (9→1)', 'Chinese': '降序 (9→1)', 'Japanese': '降順 (9→1)', 'French': 'Décroissant (9→1)' },
+    'split_btn': { 'Korean': '변환 시작하기', 'English': 'Start Converting', 'Chinese': '开始转换', 'Japanese': '変換を開始', 'French': 'Commencer la conversion' },
+    'warning_msg': { 'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)', 'English': '⚠️ Please select at least one format (PDF or ZIP)', 'Chinese': '⚠️ 请至少选择一种格式 (PDF 或 ZIP)', 'Japanese': '⚠️ 保存する形式を少なくとも1つ選択してください (PDF または ZIP)', 'French': '⚠️ Veuillez sélectionner au moins un format (PDF ou ZIP)' },
+    'processing_msg': { 'Korean': '처리 중...', 'English': 'Processing...', 'Chinese': '处理中...', 'Japanese': '処理中...', 'French': 'Traitement...' },
+    'download_pdf': { 'Korean': '📗 PDF 다운로드', 'English': '📗 Download PDF', 'Chinese': '📗 下载 PDF', 'Japanese': '📗 PDFをダウンロード', 'French': '📗 Télécharger le PDF' },
+    'download_zip': { 'Korean': '🗂️ ZIP 다운로드', 'English': '🗂️ Download ZIP', 'Chinese': '🗂️ 下载 ZIP', 'Japanese': '🗂️ ZIPをダウンロード', 'French': '🗂️ Télécharger le ZIP' },
+    'reset_btn': { 'Korean': '🗑️ 처음으로 (초기화)', 'English': '🗑️ Reset (Start Over)', 'Chinese': '🗑️ 重置 (重新开始)', 'Japanese': '🗑️ リセット (最初から)', 'French': '🗑️ Réinitialiser' },
+    'footer_copyright': { 'Korean': '© 2026 T-Splitter. All rights reserved.', 'English': '© 2026 T-Splitter. All rights reserved.', 'Chinese': '© 2026 T-Splitter. All rights reserved.', 'Japanese': '© 2026 T-Splitter. All rights reserved.', 'French': '© 2026 T-Splitter. All rights reserved.' },
+    'footer_contact': { 'Korean': '문의: hoon1018@knou.ac.kr', 'English': 'Contact: hoon1018@knou.ac.kr', 'Chinese': 'Contact: hoon1018@knou.ac.kr', 'Japanese': 'Contact: hoon1018@knou.ac.kr', 'French': 'Contact: hoon1018@knou.ac.kr' }
 }
 
 def get_text(key):
@@ -166,7 +82,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key].get('English', TRANSLATIONS[key]['Korean']))
 
 # ==========================================
-# [스타일] CSS (디자인 고도화)
+# [스타일] CSS (수정됨: 체크박스/라디오 색상 강제 적용)
 # ==========================================
 custom_style = """
 <style>
@@ -189,7 +105,7 @@ custom_style = """
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
 
-    /* Header Typography */
+    /* Header */
     .header-title {
         font-size: 28px;
         font-weight: 700;
@@ -223,7 +139,7 @@ custom_style = """
         border: none !important;
     }
 
-    /* 변환 버튼 스타일 (흰색, Bold) */
+    /* [버튼] 변환 시작하기 (파란색 유지, 글자 흰색/Bold) */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
         color: #ffffff !important;
@@ -238,22 +154,39 @@ custom_style = """
     div.stButton > button[kind="primary"]:hover { 
         background-color: #0056b3 !important; 
     }
-    /* 클릭 시에도 흰색 글자 유지 */
     div.stButton > button[kind="primary"]:focus:not(:active) {
         color: #ffffff !important;
         border-color: transparent !important;
     }
 
-    /* Download Button */
-    div.stDownloadButton > button {
-        background-color: #28a745 !important;
-        color: white !important;
-        border: none !important;
-        padding: 12px !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
+    /* ================================================================
+       [체크박스 & 라디오 버튼 색상 강제 변경: 빨강 -> 검정(#333)]
+       ================================================================ */
+    
+    /* 1. HTML 표준 accent-color (최신 브라우저용) */
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #333333 !important;
     }
-    div.stDownloadButton > button:hover { background-color: #218838 !important; }
+
+    /* 2. Streamlit 테마 변수 강제 오버라이드 (가장 강력함) */
+    :root {
+        --primary-color: #333333 !important;
+    }
+
+    /* 3. Streamlit/BaseWeb 내부 구조 직접 타겟팅 (보완용) */
+    /* 체크박스 선택 시 배경 */
+    div[data-baseweb="checkbox"] [aria-checked="true"] {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+    }
+    /* 라디오 버튼 선택 시 테두리/내부 */
+    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
+        background-color: #333333 !important; /* 채워진 원 */
+        border-color: #333333 !important;
+    }
+    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
+        background-color: #ffffff !important; /* 가운데 흰 점 */
+    }
 
     /* Footer */
     .footer {
@@ -265,61 +198,11 @@ custom_style = """
         color: #888;
         line-height: 1.6;
     }
-     
-    /* 드롭다운 박스(Selectbox) 스타일 */
+    
+    /* Selectbox */
     div[data-baseweb="select"] > div {
         font-size: 14px !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        min-height: 32px !important;
     }
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
-        font-size: 13px !important;
-    }
-    ul[data-testid="stSelectboxVirtualDropdown"] li[role="option"] {
-        font-size: 14px !important;
-    }
-
-    /* ==================================================================
-       [수정됨] 체크박스 & 라디오 버튼 색상 변경 (Red -> Dark Grey/Black) 
-       ================================================================== */
-    
-    /* 1. 브라우저 기본 스타일 제거 및 accent-color 적용 (최신 브라우저 지원) */
-    input[type="checkbox"], input[type="radio"] {
-        accent-color: #333333 !important; /* 검정색 계열 */
-    }
-
-    /* 2. Webkit 브라우저(Chrome, Safari 등)를 위한 강력한 오버라이드 */
-    
-    /* 체크박스 (Checked 상태) */
-    input[type="checkbox"]:checked {
-        background-color: #333333 !important;
-        border-color: #333333 !important;
-        /* 체크 표시 커스텀 (선택 사항, 기본 체크 표시가 보이지 않을 경우 사용) */
-        /* background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e"); */
-    }
-
-    /* 라디오 버튼 (Checked 상태) */
-    input[type="radio"]:checked {
-        background-color: #ffffff !important; /* 내부 원 색상 */
-        border: 4px solid #333333 !important; /* 외부 테두리 색상 및 두께 */
-    }
-    
-    /* (선택 사항) Streamlit의 커스텀 위젯 구조에 맞춘 스타일링 (위의 방법이 안 먹힐 경우 사용) */
-    /*
-    div[data-baseweb="checkbox"] [aria-checked="true"] {
-        background-color: #333333 !important;
-        border-color: #333333 !important;
-    }
-    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
-        border-color: #333333 !important;
-        background-color: #333333 !important;
-    }
-    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
-        background-color: #ffffff !important;
-    }
-    */
-
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
@@ -430,7 +313,7 @@ if uploaded_files:
         btn_text_base = get_text('split_btn')
         count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
         
-        # 버튼에 type="primary"가 적용되어 CSS에서 스타일을 제어합니다.
+        # 버튼 (type="primary"로 설정하여 CSS 적용)
         if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
             if not opt_pdf and not opt_zip:
                 st.warning(get_text('warning_msg'))
