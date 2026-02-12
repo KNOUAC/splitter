@@ -223,7 +223,11 @@ custom_style = """
         border: none !important;
     }
 
-    /* 변환 버튼 스타일 (흰색, Bold) */
+    /* [수정 1] 변환 버튼 스타일 
+       - 텍스트 색상: 흰색 (#ffffff)
+       - 폰트 굵기: Bold (700)
+       - 배경색: 파란색 (#007bff) 유지
+    */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
         color: #ffffff !important;
@@ -231,12 +235,17 @@ custom_style = """
         padding: 15px !important;
         border-radius: 8px !important;
         font-size: 16px !important;
-        font-weight: bold !important;
+        font-weight: 700 !important; /* Bold */
         margin-top: 10px;
         box-shadow: none !important;
     }
     div.stButton > button[kind="primary"]:hover { 
         background-color: #0056b3 !important; 
+    }
+    /* 클릭 시에도 흰색 글자 유지 */
+    div.stButton > button[kind="primary"]:focus:not(:active) {
+        color: #ffffff !important;
+        border-color: transparent !important;
     }
 
     /* Download Button */
@@ -260,25 +269,42 @@ custom_style = """
         color: #888;
         line-height: 1.6;
     }
-    
-    /* 🟢 [수정됨] 드롭다운 박스(Selectbox) 스타일 강제 적용 */
-    /* 1. 선택된 값 (닫혀있을 때) 텍스트 크기 및 박스 높이 조정 */
+     
+    /* 드롭다운 박스(Selectbox) 스타일 */
     div[data-baseweb="select"] > div {
-        font-size: 14px !important;     /* 글자 크기 */
-        padding-top: 2px !important;    /* 상단 여백 축소 */
-        padding-bottom: 2px !important; /* 하단 여백 축소 */
-        min-height: 32px !important;    /* 박스 높이 축소 */
+        font-size: 14px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        min-height: 32px !important;
     }
-    
-    /* 2. 선택된 값 내부의 텍스트 컨테이너 */
     div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
         font-size: 13px !important;
     }
-
-    /* 3. 드롭다운 메뉴 아이템 (펼쳤을 때) 텍스트 크기 */
     ul[data-testid="stSelectboxVirtualDropdown"] li[role="option"] {
         font-size: 14px !important;
     }
+
+    /* [수정 2] 체크박스 & 라디오 버튼 색상 변경 (Red -> Dark Grey) 
+       - 체크된 상태의 배경색을 #333333(진한 회색/검정)으로 변경
+    */
+    
+    /* 체크박스 (Checked) */
+    div[data-baseweb="checkbox"] [aria-checked="true"] {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+    }
+    
+    /* 라디오 버튼 (Checked) - 외부 원 */
+    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
+        border-color: #333333 !important;
+        background-color: #333333 !important;
+    }
+    
+    /* 라디오 버튼 (Checked) - 내부 점 (필요 시) */
+    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
+        background-color: #ffffff !important;
+    }
+
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
@@ -322,12 +348,10 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 라벨에 지구본 이모지 추가
     st.markdown('<div style="font-size:13px; font-weight:600; color:#555; margin-bottom:4px;">🌎 Language</div>', unsafe_allow_html=True)
     
     current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
     
-    # CSS에서 stSelectbox 글꼴 크기와 높이를 작게 조정해두었습니다.
     selected_lang_label = st.selectbox(
         "Language",
         list(LANG_MAP.keys()),
@@ -348,8 +372,11 @@ st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
 # ==========================================
 
 # 1. 파일 업로드
+st.markdown(f'<div style="font-size:14px; font-weight:600; margin-bottom:8px;">{get_text("upload_label")}</div>', unsafe_allow_html=True)
+
 uploaded_files = st.file_uploader(
-    get_text('upload_label'),
+    label="file_uploader_fixed",      
+    label_visibility="collapsed",     
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg', 'heic', 'bmp'],
     key=f"uploader_{st.session_state.uploader_key}"
@@ -365,9 +392,9 @@ if uploaded_files:
         st.markdown(f'<span style="font-weight:600; font-size:15px; display:block; margin-bottom:15px;">{get_text("format_label")}</span>', unsafe_allow_html=True)
         c_fmt1, c_fmt2 = st.columns(2)
         with c_fmt1:
-            opt_pdf = st.checkbox("PDF", value=True)
+            opt_pdf = st.checkbox("PDF", value=True, key=f"chk_pdf_{st.session_state.uploader_key}")
         with c_fmt2:
-            opt_zip = st.checkbox("ZIP", value=False)
+            opt_zip = st.checkbox("ZIP", value=False, key=f"chk_zip_{st.session_state.uploader_key}")
         
     with col_opt2:
         sort_option = 'asc'
@@ -377,7 +404,8 @@ if uploaded_files:
                 "Sort",
                 ["asc", "desc"],
                 format_func=lambda x: get_text('sort_asc') if x == 'asc' else get_text('sort_desc'),
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                key=f"radio_sort_{st.session_state.uploader_key}"
             )
 
     # 3. 변환 및 다운로드
@@ -387,6 +415,7 @@ if uploaded_files:
         btn_text_base = get_text('split_btn')
         count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
         
+        # 버튼에 type="primary"가 적용되어 CSS에서 스타일을 제어합니다.
         if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
             if not opt_pdf and not opt_zip:
                 st.warning(get_text('warning_msg'))
