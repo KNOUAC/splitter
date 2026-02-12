@@ -11,7 +11,6 @@ from pillow_heif import register_heif_opener
 # ==========================================
 register_heif_opener()
 
-# 페이지 타이틀을 HTML 디자인에 맞춰 "T-Splitter"로 변경
 st.set_page_config(
     page_title="T-Splitter", 
     page_icon="📚",
@@ -30,7 +29,6 @@ if 'language' not in st.session_state:
     st.session_state.language = 'Korean'
 
 def reset_app():
-    # on_click 콜백이 끝나면 Streamlit이 '자동으로' 화면을 갱신합니다.
     st.session_state.processed_data = None
     st.session_state.uploader_key += 1
 
@@ -44,106 +42,149 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # ==========================================
-# [다국어 데이터]
+# [다국어 데이터] (5개 언어 지원 확장)
 # ==========================================
+# 매핑: 표시용 라벨 -> 내부용 키
+LANG_MAP = {
+    '한국어': 'Korean',
+    'English (영어)': 'English',
+    '中文 (중국어)': 'Chinese',
+    '日本語 (일본어)': 'Japanese',
+    'français (프랑스어)': 'French'
+}
+
+# 내부용 키 -> 표시용 라벨 (역매핑)
+LANG_MAP_REV = {v: k for k, v in LANG_MAP.items()}
+
+# 번역 딕셔너리 (새로운 언어는 영어/한국어로 폴백 처리)
 TRANSLATIONS = {
     'page_title': {
         'Korean': 'T-Splitter',
-        'English': 'T-Splitter'
+        'English': 'T-Splitter',
+        'Chinese': 'T-Splitter',
+        'Japanese': 'T-Splitter',
+        'French': 'T-Splitter'
     },
     'sub_description': {
         'Korean': '두 쪽을 한 판에 스캔한 이미지를 업로드하면<br> 반반 잘라서 하나의 PDF 또는 ZIP 파일로 제공됩니다.',
-        'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.'
+        'English': 'If you upload an image that contains two pages scanned together,<br> it will be split into two separate pages and provided as a single PDF or a ZIP file.',
+        'Chinese': '上传包含两页扫描在一起的图像，<br>它将被分成两个单独的页面，并作为单个PDF或ZIP文件提供。',
+        'Japanese': '2ページを1枚にスキャンした画像をアップロードすると、<br>半分に分割して1つのPDFまたはZIPファイルとして提供されます。',
+        'French': 'Si vous téléchargez une image contenant deux pages numérisées ensemble,<br> elle sera divisée en deux pages distinctes et fournie sous forme de fichier PDF ou ZIP unique.'
     },
     'upload_label': {
         'Korean': '이미지 파일 업로드',
-        'English': 'Upload Image Files'
+        'English': 'Upload Image Files',
+        'Chinese': '上传图像文件',
+        'Japanese': '画像ファイルをアップロード',
+        'French': 'Télécharger des fichiers image'
     },
     'format_label': {
         'Korean': '저장 형식',
-        'English': 'Save Format'
+        'English': 'Save Format',
+        'Chinese': '保存格式',
+        'Japanese': '保存形式',
+        'French': 'Format d\'enregistrement'
     },
     'sort_label': { 
         'Korean': '정렬 순서 (파일명 기준)',
-        'English': 'Sort Order (Filename)'
+        'English': 'Sort Order (Filename)',
+        'Chinese': '排序顺序 (文件名)',
+        'Japanese': '並び順 (ファイル名)',
+        'French': 'Ordre de tri (nom de fichier)'
     },
     'sort_asc': { 
         'Korean': '오름차순 (1→9)',
-        'English': 'Ascending (1→9)'
+        'English': 'Ascending (1→9)',
+        'Chinese': '升序 (1→9)',
+        'Japanese': '昇順 (1→9)',
+        'French': 'Croissant (1→9)'
     },
     'sort_desc': { 
         'Korean': '내림차순 (9→1)',
-        'English': 'Descending (9→1)'
+        'English': 'Descending (9→1)',
+        'Chinese': '降序 (9→1)',
+        'Japanese': '降順 (9→1)',
+        'French': 'Décroissant (9→1)'
     },
     'split_btn': {
         'Korean': '변환 시작하기',
-        'English': 'Start Converting'
+        'English': 'Start Converting',
+        'Chinese': '开始转换',
+        'Japanese': '変換を開始',
+        'French': 'Commencer la conversion'
     },
     'warning_msg': {
         'Korean': '⚠️ 저장할 형식을 최소 하나 선택해주세요 (PDF 또는 ZIP)',
-        'English': '⚠️ Please select at least one format (PDF or ZIP)'
+        'English': '⚠️ Please select at least one format (PDF or ZIP)',
+        'Chinese': '⚠️ 请至少选择一种格式 (PDF 或 ZIP)',
+        'Japanese': '⚠️ 保存する形式を少なくとも1つ選択してください (PDF または ZIP)',
+        'French': '⚠️ Veuillez sélectionner au moins un format (PDF ou ZIP)'
     },
     'processing_msg': {
         'Korean': '처리 중...',
-        'English': 'Processing...'
+        'English': 'Processing...',
+        'Chinese': '处理中...',
+        'Japanese': '処理中...',
+        'French': 'Traitement...'
     },
     'download_pdf': {
         'Korean': '📗 PDF 다운로드',
-        'English': '📗 Download PDF'
+        'English': '📗 Download PDF',
+        'Chinese': '📗 下载 PDF',
+        'Japanese': '📗 PDFをダウンロード',
+        'French': '📗 Télécharger le PDF'
     },
     'download_zip': {
         'Korean': '🗂️ ZIP 다운로드',
-        'English': '🗂️ Download ZIP'
+        'English': '🗂️ Download ZIP',
+        'Chinese': '🗂️ 下载 ZIP',
+        'Japanese': '🗂️ ZIPをダウンロード',
+        'French': '🗂️ Télécharger le ZIP'
     },
     'reset_btn': {
         'Korean': '🗑️ 처음으로 (초기화)',
-        'English': '🗑️ Reset (Start Over)'
-    },
-    'menu_settings': {
-        'Korean': '언어 (Language)', 
-        'English': '언어 (Language)' 
-    },
-    'menu_lang': {
-        'Korean': '언어 설정',
-        'English': 'Language Settings'
+        'English': '🗑️ Reset (Start Over)',
+        'Chinese': '🗑️ 重置 (重新开始)',
+        'Japanese': '🗑️ リセット (最初から)',
+        'French': '🗑️ Réinitialiser'
     },
      'footer_copyright': {
-        'Korean': '© 2024 T-Splitter. All rights reserved.',
-        'English': '© 2024 T-Splitter. All rights reserved.'
+        'Korean': '© 2026 T-Splitter. All rights reserved.',
+        'English': '© 2026 T-Splitter. All rights reserved.',
+        'Chinese': '© 2026 T-Splitter. All rights reserved.',
+        'Japanese': '© 2026 T-Splitter. All rights reserved.',
+        'French': '© 2026 T-Splitter. All rights reserved.'
     },
     'footer_contact': {
-        'Korean': '문의: support@tsplitter.com',
-        'English': 'Contact: support@tsplitter.com'
+        'Korean': '문의: hoon1018@knou.ac.kr',
+        'English': 'Contact: hoon1018@knou.ac.kr',
+        'Chinese': 'Contact: hoon1018@knou.ac.kr',
+        'Japanese': 'Contact: hoon1018@knou.ac.kr',
+        'French': 'Contact: hoon1018@knou.ac.kr'
     }
 }
 
 def get_text(key):
     lang = st.session_state.language
-    return TRANSLATIONS[key].get(lang, TRANSLATIONS[key]['Korean'])
+    # 해당 언어 키가 없으면 영어, 그것도 없으면 한국어 반환
+    return TRANSLATIONS[key].get(lang, TRANSLATIONS[key].get('English', TRANSLATIONS[key]['Korean']))
 
 # ==========================================
-# [스타일] CSS (HTML 디자인 반영)
+# [스타일] CSS (디자인 고도화)
 # ==========================================
 custom_style = """
 <style>
-    /* Global Reset & Fonts from HTML */
-    * {
-        box-sizing: border-box;
-    }
+    /* Global Reset & Fonts */
+    * { box-sizing: border-box; }
     html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p, h1, h2, label {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
         color: #333;
     }
-    body {
-        background-color: #f9f9f9;
-    }
+    body { background-color: #f9f9f9; }
+    header[data-testid="stHeader"] { visibility: hidden; }
 
-    /* Hide default Streamlit header */
-    header[data-testid="stHeader"] {
-        visibility: hidden;
-    }
-
-    /* Main Layout Container */
+    /* Main Container */
     .block-container {
         max-width: 640px;
         margin: 2rem auto;
@@ -153,7 +194,7 @@ custom_style = """
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
 
-    /* Header Styles */
+    /* Header Typography */
     .header-title {
         font-size: 28px;
         font-weight: 700;
@@ -171,113 +212,70 @@ custom_style = """
         padding-bottom: 1.5rem;
     }
 
-    /* Language Button Styling */
+    /* 🟢 [커스텀 언어 버튼 스타일] - KRDS 스타일 모방 */
+    /* Streamlit Popover 버튼을 타겟팅하여 스타일 재정의 */
     [data-testid="stPopover"] > button {
-        padding: 8px 12px !important;
-        border: 1px solid #ddd !important;
-        border-radius: 6px !important;
-        background: #fff !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #fff !important;
+        border: 1px solid #d6d6d6 !important;
+        border-radius: 4px !important;
+        padding: 0 12px !important;
+        height: 32px !important; /* small size */
         font-size: 13px !important;
-        font-weight: 500 !important;
-        color: #555 !important;
+        color: #444 !important;
         box-shadow: none !important;
+        transition: all 0.2s;
+        width: auto !important;
+        min-width: 100px;
     }
     [data-testid="stPopover"] > button:hover {
-        background: #f5f5f5 !important;
-        border-color: #ccc !important;
-        color: #333 !important;
+        border-color: #333 !important;
+        background-color: #fcfcfc !important;
+        color: #111 !important;
+    }
+    /* 아이콘 시각적 조정 */
+    [data-testid="stPopover"] > button span {
+        margin-right: 5px;
     }
 
-    /* Upload Section Styling */
-    [data-testid="stFileUploader"] {
-        margin-bottom: 2rem;
-    }
-    [data-testid="stFileUploader"] label {
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 10px;
-        display: block;
-    }
+    /* Upload Area */
     [data-testid="stFileUploader"] section {
         border: 2px dashed #ddd !important;
-        border-radius: 10px !important;
-        padding: 40px 20px !important;
-        text-align: center;
         background: #fafafa !important;
+        border-radius: 10px !important;
     }
     [data-testid="stFileUploader"] section:hover {
         border-color: #007bff !important;
         background: #f0f8ff !important;
     }
-    /* Browse files button inside uploader */
     [data-testid="stFileUploader"] button[kind="secondary"] {
         background-color: #007bff !important;
         color: white !important;
         border: none !important;
-        padding: 8px 15px !important;
-        border-radius: 5px !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        margin-top: 10px;
-        box-shadow: none !important;
-    }
-     [data-testid="stFileUploader"] button[kind="secondary"]:hover {
-        background-color: #0056b3 !important;
-     }
-
-
-    /* Options Section Labels */
-    .options-label {
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 15px;
-        display: block;
     }
 
-    /* Checkbox & Radio Styling (Cleaner look) */
-    [data-testid="stCheckbox"] label, [data-testid="stRadio"] label {
-        font-size: 14px;
-    }
-    /* Custom color for selected state */
-    div[data-testid="stChecked"] > div:first-child {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-
-
-    /* Convert Button (Primary) */
+    /* Buttons */
     div.stButton > button[kind="primary"] {
-        width: 100%;
-        padding: 15px !important;
         background-color: #007bff !important;
         color: white !important;
         border: none !important;
+        padding: 15px !important;
         border-radius: 8px !important;
-        font-size: 16px !important;
         font-weight: 600 !important;
-        margin-top: 1rem;
-        box-shadow: none !important;
     }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #0056b3 !important;
-    }
+    div.stButton > button[kind="primary"]:hover { background-color: #0056b3 !important; }
 
-    /* Download Button (Secondary/Success) */
     div.stDownloadButton > button {
-        width: 100%;
-        padding: 12px !important;
         background-color: #28a745 !important;
         color: white !important;
         border: none !important;
+        padding: 12px !important;
         border-radius: 8px !important;
-        font-size: 15px !important;
         font-weight: 600 !important;
-        box-shadow: none !important;
     }
-     div.stDownloadButton > button:hover {
-        background-color: #218838 !important;
-    }
-
+    div.stDownloadButton > button:hover { background-color: #218838 !important; }
 
     /* Footer */
     .footer {
@@ -323,27 +321,33 @@ def process_image_in_memory(uploaded_file):
     return [(fname_l, buf_l, img_l), (fname_r, buf_r, img_r)]
 
 # ==========================================
-# [UI] 헤더 영역 (HTML 디자인 반영)
+# [UI] 헤더 영역
 # ==========================================
-# 타이틀과 언어 변경 버튼을 포함한 헤더
-h_col1, h_col2 = st.columns([3, 1])
+h_col1, h_col2 = st.columns([3, 1.2])
+
 with h_col1:
     st.markdown(f'<h1 class="header-title">{get_text("page_title")}</h1>', unsafe_allow_html=True)
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 언어 변경 팝오버 버튼 (우측 상단 배치)
-    with st.popover("Language", use_container_width=True):
-        st.markdown(f"<div style='font-weight: bold; margin-bottom: 10px;'>{get_text('menu_lang')}</div>", unsafe_allow_html=True)
-        new_lang = st.radio(
-            "Language Selection", 
-            ["Korean", "English"],
-            index=0 if st.session_state.language == 'Korean' else 1,
-            key='lang_radio',
+    # 🟢 [수정됨] 언어 변경 버튼 (KRDS 스타일 구현)
+    # CSS로 스타일링된 Streamlit Popover
+    # "🌐 언어 변경 ▾" 텍스트를 버튼에 표시
+    with st.popover("🌐 언어 변경", use_container_width=False):
+        # 현재 선택된 언어의 라벨 찾기
+        current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
+        
+        selected_lang_label = st.radio(
+            "Select Language",
+            list(LANG_MAP.keys()),
+            index=list(LANG_MAP.keys()).index(current_label),
             label_visibility="collapsed"
         )
-        if new_lang != st.session_state.language:
-            st.session_state.language = new_lang
+        
+        # 선택이 변경되면 세션 상태 업데이트 및 리런
+        new_lang_code = LANG_MAP[selected_lang_label]
+        if new_lang_code != st.session_state.language:
+            st.session_state.language = new_lang_code
             st.rerun()
 
 st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
@@ -353,7 +357,7 @@ st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
 # [UI] 메인 콘텐츠 영역
 # ==========================================
 
-# 1. 파일 업로드 섹션
+# 1. 파일 업로드
 uploaded_files = st.file_uploader(
     get_text('upload_label'),
     accept_multiple_files=True, 
@@ -362,13 +366,13 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
-    st.write("") # 간격 추가
+    st.write("") 
     
-    # 2. 옵션 선택 섹션 (저장 형식, 정렬 순서)
+    # 2. 옵션
     col_opt1, col_opt2 = st.columns(2)
     
     with col_opt1:
-        st.markdown(f'<span class="options-label">{get_text("format_label")}</span>', unsafe_allow_html=True)
+        st.markdown(f'<span style="font-weight:600; font-size:15px; display:block; margin-bottom:15px;">{get_text("format_label")}</span>', unsafe_allow_html=True)
         c_fmt1, c_fmt2 = st.columns(2)
         with c_fmt1:
             opt_pdf = st.checkbox("PDF", value=True)
@@ -378,7 +382,7 @@ if uploaded_files:
     with col_opt2:
         sort_option = 'asc'
         if opt_pdf:
-            st.markdown(f'<span class="options-label">{get_text("sort_label")}</span>', unsafe_allow_html=True)
+            st.markdown(f'<span style="font-weight:600; font-size:15px; display:block; margin-bottom:15px;">{get_text("sort_label")}</span>', unsafe_allow_html=True)
             sort_option = st.radio(
                 "Sort",
                 ["asc", "desc"],
@@ -386,14 +390,13 @@ if uploaded_files:
                 label_visibility="collapsed"
             )
 
-    # 3. 변환 버튼 및 결과 처리 영역
-    st.write("") # 간격 추가
+    # 3. 변환 및 다운로드
+    st.write("") 
     
     if st.session_state.processed_data is None:
         btn_text_base = get_text('split_btn')
         count_text = f"({len(uploaded_files)} files)" if st.session_state.language == 'English' else f"({len(uploaded_files)}장)"
         
-        # 전체 너비의 파란색 버튼
         if st.button(f"{btn_text_base} {count_text}", type="primary", use_container_width=True):
             if not opt_pdf and not opt_zip:
                 st.warning(get_text('warning_msg'))
@@ -430,14 +433,12 @@ if uploaded_files:
                     st.error(f"Error: {e}")
 
     else:
-        # 처리 완료 후 다운로드 버튼 및 초기화 버튼 표시
         data_list = st.session_state.processed_data
         
         if opt_pdf:
             pdf_buffer = io.BytesIO()
             pil_imgs = [item[2] for item in data_list]
             if pil_imgs:
-                # [해상도 유지] 200.0 DPI (크롬 50% 줌 최적화)
                 pil_imgs[0].save(pdf_buffer, format="PDF", save_all=True, append_images=pil_imgs[1:], resolution=200.0)
                 st.download_button(
                     label=get_text('download_pdf'),
@@ -466,7 +467,7 @@ if uploaded_files:
             pass
 
 # ==========================================
-# [UI] 푸터 영역
+# [UI] 푸터
 # ==========================================
 st.markdown(f"""
 <div class="footer">
