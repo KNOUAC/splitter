@@ -42,7 +42,7 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 # ==========================================
-# [다국어 데이터] (5개 언어 지원 확장)
+# [다국어 데이터] (5개 언어 지원)
 # ==========================================
 LANG_MAP = {
     '한국어': 'Korean',
@@ -145,12 +145,12 @@ TRANSLATIONS = {
         'Japanese': '🗑️ リセット (最初から)',
         'French': '🗑️ Réinitialiser'
     },
-     'footer_copyright': {
-        'Korean': '© 2026 T-Splitter. All rights reserved.',
-        'English': '© 2026 T-Splitter. All rights reserved.',
-        'Chinese': '© 2026 T-Splitter. All rights reserved.',
-        'Japanese': '© 2026 T-Splitter. All rights reserved.',
-        'French': '© 2026 T-Splitter. All rights reserved.'
+    'footer_copyright': {
+        'Korean': '© 2026 Theowise. All rights reserved.',
+        'English': '© 2026 Theowise. All rights reserved.',
+        'Chinese': '© 2026 Theowise. All rights reserved.',
+        'Japanese': '© 2026 Theowise. All rights reserved.',
+        'French': '© 2026 Theowise. All rights reserved.'
     },
     'footer_contact': {
         'Korean': '문의: hoon1018@knou.ac.kr',
@@ -170,12 +170,22 @@ def get_text(key):
 # ==========================================
 custom_style = """
 <style>
-    /* Global Reset & Fonts */
-    * { box-sizing: border-box; }
+    /* 1. 폰트 임포트 (Gothic A1 + Nanum Myeongjo) */
+    @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+    /* 2. 기본 폰트 설정 (본문용) */
     html, body, [class*="css"], [class*="st-"], button, input, textarea, div, span, p, h1, h2, label {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif !important;
         color: #333;
     }
+    
+    /* 3. 테마 색상 변수 설정 */
+    :root {
+        --primary-color: #333333 !important;
+        --st-color-primary: #333333 !important;
+    }
+
     body { background-color: #f9f9f9; }
     header[data-testid="stHeader"] { visibility: hidden; }
 
@@ -206,45 +216,52 @@ custom_style = """
         margin-bottom: 2.5rem;
         padding-bottom: 1.5rem;
     }
+    
+    /* 로고 스타일 (Nanum Myeongjo) */
+    .theowise-logo {
+        padding: 23px 0 0;
+        font-family: 'Nanum Myeongjo', serif !important;
+        font-weight: 800 !important;
+        font-size: 1.75em !important;
+        line-height: 32px !important;
+        letter-spacing: -0.2px !important;
+        color: #333 !important;
+        text-decoration: none;
+    }
 
-    /* 🟢 [수정됨] 언어 변경 버튼 스타일 - 테두리 없고 깔끔하게 */
-    /* Popover 컨테이너 우측 정렬 */
+    /* 🟢 [수정됨] Language 버튼 스타일 (테두리 제거, 검은색 폰트) */
     [data-testid="stPopover"] {
         display: flex;
         justify-content: flex-end;
     }
-    /* 버튼 자체 스타일링: 투명 배경, 테두리 제거, 텍스트 정렬 */
     [data-testid="stPopover"] > button {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
+        outline: none !important;
         padding: 6px 8px !important;
         font-size: 14px !important;
         font-weight: 600 !important;
-        color: #555 !important;
+        
+        /* 텍스트 및 아이콘 색상: 검은색(#333) */
+        color: #333 !important;
+        
         display: flex;
         align-items: center;
         height: auto !important;
         width: auto !important;
         min-width: auto !important;
     }
-    /* 호버 효과: 텍스트 색상 변경 */
     [data-testid="stPopover"] > button:hover {
-        color: #007bff !important;
-        background: #f8f9fa !important; /* 살짝 밝은 배경 추가하여 호버 영역 인지 */
+        color: #000 !important; /* 호버 시 완전 검정 */
+        background: #f4f4f4 !important; /* 호버 시 아주 연한 회색 */
         border-radius: 4px !important;
     }
-    /* 버튼 내부 콘텐츠(아이콘+텍스트) 정렬 */
     [data-testid="stPopover"] > button > div {
         display: flex;
         align-items: center;
-        gap: 6px; /* 아이콘과 텍스트 사이 간격 */
+        gap: 6px;
     }
-    /* 기본 "expand_more" 텍스트가 보인다면 숨김 처리 (필요시 주석 해제) */
-    /* [data-testid="stPopover"] > button > div > span[data-testid="stBaseButton-secondaryIcon"] {
-        display: none !important;
-    } */
-
 
     /* Upload Area */
     [data-testid="stFileUploader"] section {
@@ -253,26 +270,51 @@ custom_style = """
         border-radius: 10px !important;
     }
     [data-testid="stFileUploader"] section:hover {
-        border-color: #007bff !important;
-        background: #f0f8ff !important;
+        border-color: #333 !important;
+        background: #f0f0f0 !important;
     }
     [data-testid="stFileUploader"] button[kind="secondary"] {
-        background-color: #007bff !important;
-        color: white !important;
-        border: none !important;
+        border-color: #38b6ff !important;
+        color: #38b6ff !important;
+        background-color: transparent !important;
+        border: 1px solid #38b6ff !important;
     }
 
-    /* Buttons */
+    /* 체크박스 색상 (Black/Grey) */
+    div[data-testid="stCheckbox"] label > div:first-child > div[role="checkbox"][aria-checked="true"] {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+    }
+    div[data-testid="stCheckbox"] label > div:first-child > div[role="checkbox"][aria-checked="true"] svg {
+        fill: white !important;
+    }
+    
+    /* 라디오 버튼 색상 (Black/Grey) */
+    div[data-testid="stRadio"] label[data-checked="true"] > div:first-child {
+        background-color: #333333 !important;
+        border-color: #333333 !important;
+    }
+    div[data-testid="stRadio"] label[data-checked="true"] p {
+        color: #333333 !important;
+    }
+
+    /* 변환 버튼 (Primary) -> Sky Blue, White Text, Bold */
     div.stButton > button[kind="primary"] {
-        background-color: #007bff !important;
-        color: white !important;
+        background-color: #38b6ff !important;
+        color: #ffffff !important;
         border: none !important;
         padding: 15px !important;
         border-radius: 8px !important;
-        font-weight: 600 !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        margin-top: 10px;
+        box-shadow: none !important;
     }
-    div.stButton > button[kind="primary"]:hover { background-color: #0056b3 !important; }
+    div.stButton > button[kind="primary"]:hover { 
+        background-color: #0288d1 !important; 
+    }
 
+    /* Download Button */
     div.stDownloadButton > button {
         background-color: #28a745 !important;
         color: white !important;
@@ -282,6 +324,12 @@ custom_style = """
         font-weight: 600 !important;
     }
     div.stDownloadButton > button:hover { background-color: #218838 !important; }
+    
+    /* 파일 목록 삭제 버튼 */
+    [data-testid="stFileUploaderDeleteBtn"] button { color: #888 !important; border: none !important; }
+    [data-testid="stFileUploaderDeleteBtn"] button:hover { color: #333 !important; background: #eee !important; }
+    [data-testid="stFileUploaderDeleteBtn"] svg { fill: #888 !important; }
+    [data-testid="stFileUploaderDeleteBtn"]:hover svg { fill: #333 !important; }
 
     /* Footer */
     .footer {
@@ -329,6 +377,9 @@ def process_image_in_memory(uploaded_file):
 # ==========================================
 # [UI] 헤더 영역
 # ==========================================
+st.markdown('<div class="theowise-logo">Theowise</div>', unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
 h_col1, h_col2 = st.columns([3, 1.2])
 
 with h_col1:
@@ -336,8 +387,8 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 언어 변경 버튼 (Popover)
-    with st.popover("🌐 언어 변경 ▾", use_container_width=False):
+    # 🟢 [수정됨] 버튼 텍스트 "Language", 색상 및 테두리는 CSS로 처리
+    with st.popover("🌐 Language ▾", use_container_width=False):
         current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
         
         selected_lang_label = st.radio(
