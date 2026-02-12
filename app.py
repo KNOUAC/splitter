@@ -188,9 +188,23 @@ custom_style = """
         line-height: 1.6;
     }
     
-    /* Selectbox */
+    /* 🟢 [수정됨] 드롭다운 박스(Selectbox) 스타일 강제 적용 */
+    /* 1. 선택된 값 (닫혀있을 때) 텍스트 크기 및 박스 높이 조정 */
     div[data-baseweb="select"] > div {
-        font-size: 14px !important;
+        font-size: 13px !important;     /* 글자 크기 */
+        padding-top: 2px !important;    /* 상단 여백 축소 */
+        padding-bottom: 2px !important; /* 하단 여백 축소 */
+        min-height: 32px !important;    /* 박스 높이 축소 */
+    }
+    
+    /* 2. 선택된 값 내부의 텍스트 컨테이너 */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
+        font-size: 13px !important;
+    }
+
+    /* 3. 드롭다운 메뉴 아이템 (펼쳤을 때) 텍스트 크기 */
+    ul[data-testid="stSelectboxVirtualDropdown"] li[role="option"] {
+        font-size: 13px !important;
     }
 </style>
 """
