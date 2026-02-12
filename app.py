@@ -82,7 +82,7 @@ def get_text(key):
     return TRANSLATIONS[key].get(lang, TRANSLATIONS[key].get('English', TRANSLATIONS[key]['Korean']))
 
 # ==========================================
-# [스타일] CSS (버튼 색상 복구 및 체크박스 개별 지정)
+# [스타일] CSS (안정성 확보 버전)
 # ==========================================
 custom_style = """
 <style>
@@ -123,7 +123,7 @@ custom_style = """
         padding-bottom: 1.5rem;
     }
 
-    /* Upload Area Styling */
+    /* Upload Area */
     [data-testid="stFileUploader"] section {
         border: 2px dashed #ddd !important;
         background: #fafafa !important;
@@ -135,26 +135,26 @@ custom_style = """
     }
 
     /* ================================================================
-       [버튼 스타일 통합]
-       1. 파일 업로드 버튼 (Browse files)
-       2. 변환 시작 버튼
-       => 둘 다 파란색 배경(#007bff) + 흰색 글자(#ffffff) + Bold
+       [버튼 스타일 구분 적용]
+       1. Browse files (파일 업로드 버튼): 파란색 + 일반 굵기(Normal)
+       2. Start Converting (변환 버튼): 파란색 + 굵게(Bold)
        ================================================================ */
     
-    /* 1. 파일 업로드 버튼 (Browse files) */
+    /* 1. Browse files 버튼 (Bold 제거) */
     [data-testid="stFileUploader"] button[kind="secondary"] {
         background-color: #007bff !important;
         color: #ffffff !important;
         border: none !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important; /* Normal Weight */
         border-radius: 6px !important;
     }
-    /* 버튼 내부 텍스트 강제 흰색 */
+    /* 버튼 내부 텍스트 색상만 흰색 강제 (굵기는 상속) */
     [data-testid="stFileUploader"] button[kind="secondary"] * {
         color: #ffffff !important;
+        font-weight: 400 !important;
     }
 
-    /* 2. 변환 시작 버튼 (Primary Button) */
+    /* 2. 변환 시작하기 버튼 (Bold 유지) */
     div.stButton > button[kind="primary"] {
         background-color: #007bff !important;
         color: #ffffff !important;
@@ -175,31 +175,6 @@ custom_style = """
     [data-testid="stFileUploader"] button[kind="secondary"]:hover,
     div.stButton > button[kind="primary"]:hover { 
         background-color: #0056b3 !important; 
-    }
-
-    /* ================================================================
-       [체크박스 & 라디오 버튼: 검정(#333)]
-       주의: :root { --primary-color }를 건드리지 않고 개별 요소만 변경
-       ================================================================ */
-    /* 1. HTML 표준 (브라우저 기본) */
-    input[type="checkbox"], input[type="radio"] {
-        accent-color: #333333 !important;
-    }
-
-    /* 2. Streamlit Custom Checkbox */
-    div[data-baseweb="checkbox"] [aria-checked="true"] {
-        background-color: #333333 !important;
-        border-color: #333333 !important;
-    }
-
-    /* 3. Streamlit Custom Radio */
-    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child {
-        background-color: #333333 !important;
-        border-color: #333333 !important;
-    }
-    /* 라디오 버튼 내부 흰 점 */
-    div[data-baseweb="radio"] [aria-checked="true"] > div:first-child > div {
-        background-color: #ffffff !important;
     }
 
     /* Footer */
