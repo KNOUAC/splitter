@@ -207,36 +207,6 @@ custom_style = """
         padding-bottom: 1.5rem;
     }
 
-    /* 언어 변경 버튼 스타일 - 테두리 없고 깔끔하게 */
-    [data-testid="stPopover"] {
-        display: flex;
-        justify-content: flex-end;
-    }
-    [data-testid="stPopover"] > button {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 6px 8px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: #555 !important;
-        display: flex;
-        align-items: center;
-        height: auto !important;
-        width: auto !important;
-        min-width: auto !important;
-    }
-    [data-testid="stPopover"] > button:hover {
-        color: #007bff !important;
-        background: #f8f9fa !important;
-        border-radius: 4px !important;
-    }
-    [data-testid="stPopover"] > button > div {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
     /* Upload Area */
     [data-testid="stFileUploader"] section {
         border: 2px dashed #ddd !important;
@@ -333,21 +303,22 @@ with h_col1:
     st.markdown(f'<p class="header-subtitle">{get_text("sub_description")}</p>', unsafe_allow_html=True)
 
 with h_col2:
-    # 언어 변경 버튼 (Popover)
-    with st.popover("🌐 언어 변경 ▾", use_container_width=False):
-        current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
-        
-        selected_lang_label = st.radio(
-            "Select Language",
-            list(LANG_MAP.keys()),
-            index=list(LANG_MAP.keys()).index(current_label),
-            label_visibility="collapsed"
-        )
-        
-        new_lang_code = LANG_MAP[selected_lang_label]
-        if new_lang_code != st.session_state.language:
-            st.session_state.language = new_lang_code
-            st.rerun()
+    # [수정됨] 언어 변경 UI: Selectbox 형태로 변경 (라벨 포함)
+    st.markdown('<div style="font-size:13px; font-weight:600; color:#555; margin-bottom:4px;">Language</div>', unsafe_allow_html=True)
+    
+    current_label = LANG_MAP_REV.get(st.session_state.language, '한국어')
+    
+    selected_lang_label = st.selectbox(
+        "Language",
+        list(LANG_MAP.keys()),
+        index=list(LANG_MAP.keys()).index(current_label),
+        label_visibility="collapsed"
+    )
+    
+    new_lang_code = LANG_MAP[selected_lang_label]
+    if new_lang_code != st.session_state.language:
+        st.session_state.language = new_lang_code
+        st.rerun()
 
 st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
 
@@ -415,7 +386,7 @@ if uploaded_files:
                         for fname, zip_buf, pdf_img in results:
                             base, ext = os.path.splitext(fname)
                             if any(x[0] == fname for x in processed_list):
-                                        fname = f"{base}_{i}{ext}"
+                                    fname = f"{base}_{i}{ext}"
                             processed_list.append((fname, zip_buf, pdf_img))
                         
                         progress_bar.progress((i + 1) / total)
